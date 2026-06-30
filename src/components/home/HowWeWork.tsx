@@ -4,70 +4,60 @@ import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useRef } from 'react';
 
 const steps = [
-  { id: 1, title: 'Аналіз', description: 'Вивчаємо ваш бізнес, конкурентів, аудиторію.' },
-  { id: 2, title: 'Стратегія', description: 'Розробляємо унікальну стратегію просування.' },
-  { id: 3, title: 'Упаковка', description: 'Створюємо бренд, логотип, сайт, контент.' },
-  { id: 4, title: 'Реклама', description: 'Запускаємо таргетовану рекламу, SEO, SMM.' },
-  { id: 5, title: 'Оптимізація', description: 'Аналізуємо результати, покращуємо ефективність.' },
-  { id: 6, title: 'Результат', description: 'Отримуєте стабільний потік клієнтів.' },
+  { id: 1, title: 'Заявка', desc: 'Ви заповнюєте форму з описом і завантажуєте файл моделі.' },
+  { id: 2, title: 'Розрахунок', desc: 'Ми оцінюємо вартість і терміни, зв’язуємося з вами.' },
+  { id: 3, title: 'Друк', desc: 'Запускаємо друк з контролем якості на кожному етапі.' },
+  { id: 4, title: 'Готово', desc: 'Ви отримуєте готовий виріб або доставку по Україні.' },
 ];
 
 export default function HowWeWork() {
-  const [activeSteps, setActiveSteps] = useState<number[]>([]);
-  const [selectedStep, setSelectedStep] = useState<number | null>(null);
+  const [active, setActive] = useState<number | null>(null);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
-  const handleStepClick = (id: number) => {
-    setActiveSteps(Array.from({ length: id }, (_, i) => i + 1));
-    setSelectedStep(id);
-  };
-
   return (
-    <section ref={ref} className="py-20 bg-darker">
+    <section ref={ref} className="py-28 bg-white">
       <div className="container-custom">
-        <motion.h2 
-          initial={{ opacity: 0, y: 20 }}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          className="text-center mb-12 gradient-text"
+          className="text-center max-w-2xl mx-auto mb-16"
         >
-          Простий процес — сильний результат
-        </motion.h2>
-        <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4 mb-12">
-          {steps.map((step, idx) => (
-            <div key={step.id} className="flex items-center">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleStepClick(step.id)}
-                className={`w-12 h-12 rounded-full border-2 font-bold text-lg transition-all duration-300 ${
-                  activeSteps.includes(step.id)
-                    ? 'bg-red border-red text-white'
-                    : 'border-red/50 text-red/70 bg-transparent'
-                }`}
-              >
-                {step.id}
-              </motion.button>
-              {idx < steps.length - 1 && (
-                <motion.span className="ml-2 md:ml-4 text-red/50 text-xl font-bold">→</motion.span>
-              )}
-            </div>
+          <h2 className="text-[#1a3c34]">Як ми працюємо</h2>
+          <p className="text-[#5a5a5a] text-lg">Натисніть на крок, щоб дізнатися деталі</p>
+        </motion.div>
+
+        <div className="flex flex-wrap justify-center gap-4 mb-10">
+          {steps.map((step) => (
+            <button
+              key={step.id}
+              onClick={() => setActive(active === step.id ? null : step.id)}
+              className={`px-6 py-3 rounded-full border-2 transition-all duration-300 font-medium ${
+                active === step.id
+                  ? 'border-[#c9a84c] bg-[#c9a84c]/10 text-[#1a3c34] shadow-lg shadow-[#c9a84c]/20'
+                  : 'border-[#d0d0d0] text-[#5a5a5a] hover:border-[#1a3c34] hover:text-[#1a3c34]'
+              }`}
+            >
+              {step.id}. {step.title}
+            </button>
           ))}
         </div>
+
         <AnimatePresence mode="wait">
-          {selectedStep && (
+          {active && (
             <motion.div
-              key={selectedStep}
+              key={active}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-2xl mx-auto text-center p-6 glass-card"
+              transition={{ duration: 0.4 }}
+              className="max-w-2xl mx-auto bg-[#f5f0eb] p-8 rounded-3xl shadow-lg"
             >
-              <h3 className="text-2xl font-bold text-red mb-2">
-                {steps.find(s => s.id === selectedStep)?.title}
+              <h3 className="text-2xl font-serif font-bold text-[#1a3c34] mb-2">
+                {steps.find(s => s.id === active)?.title}
               </h3>
-              <p className="text-gray-300">
-                {steps.find(s => s.id === selectedStep)?.description}
+              <p className="text-[#3d3d3d] text-lg">
+                {steps.find(s => s.id === active)?.desc}
               </p>
             </motion.div>
           )}
