@@ -9,25 +9,84 @@ export default function PrinterPage() {
   const isInView = useInView(ref, { once: true, margin: '-50px' });
   const [hoveredImage, setHoveredImage] = useState(false);
 
+  // Основні характеристики
   const specs = [
-    { label: 'Технологія', value: 'FDM', icon: '🖨️', color: '#7ec8a3' },
-    { label: 'Робоча область', value: '220×220×250 мм', icon: '📐', color: '#c9a84c' },
-    { label: 'Точність', value: '0.1 мм', icon: '🎯', color: '#4a9eff' },
-    { label: 'Швидкість', value: '180 мм/с', icon: '⚡', color: '#ff6b6b' },
+    { label: 'Технологія', value: 'FDM (FFF)', icon: '🖨️', color: '#7ec8a3' },
+    { label: 'Робоча область', value: '256×256×256 мм', icon: '📐', color: '#c9a84c' },
+    { label: 'Точність друку', value: '±0.1 мм', icon: '🎯', color: '#4a9eff' },
+    { label: 'Макс. швидкість', value: 'до 500 мм/с', icon: '⚡', color: '#ff6b6b' },
   ];
 
+  // Детальні технічні характеристики
   const detailedSpecs = [
-    { label: 'Матеріали', value: 'PLA, ABS, PETG, TPU' },
-    { label: 'Підігрів стола', value: 'до 100°C' },
-    { label: 'Тип екструдера', value: 'Direct Drive' },
+    { label: 'Технологія', value: 'FDM (Fused Deposition Modeling)' },
+    { label: 'Робоча область', value: '256 × 256 × 256 мм' },
+    { label: 'Точність друку', value: '±0.1 мм' },
+    { label: 'Висота шару', value: '0.05 – 0.3 мм' },
+    { label: 'Максимальна швидкість', value: 'до 500 мм/с' },
+    { label: 'Прискорення', value: 'до 20 000 мм/с²' },
+    { label: 'Діаметр нитки', value: '1.75 мм' },
+    { label: 'Діаметр сопла', value: '0.4 мм (змінне)' },
+    { label: 'Температура сопла', value: 'до 300°C' },
+    { label: 'Температура стола', value: 'до 100°C' },
+    { label: 'Матеріали', value: 'PLA, ABS, PETG, TPU, PC, PA, ASA' },
     { label: 'Екран', value: 'Кольоровий сенсорний 4.3"' },
+    { label: 'Підключення', value: 'Wi-Fi, USB, Ethernet' },
+    { label: 'Формати файлів', value: 'STL, OBJ, 3MF, G-code' },
+    { label: 'Вага', value: '~8 кг' },
+    { label: 'Габарити', value: '400 × 400 × 450 мм' },
   ];
 
+  // Функції та можливості
   const features = [
-    { icon: '⚡', title: 'Швидкість', desc: 'Друкує на 30% швидше за аналоги', color: '#ff6b6b' },
-    { icon: '🎯', title: 'Точність', desc: 'Висота шару 0.1 мм для ідеальних деталей', color: '#4a9eff' },
-    { icon: '🔄', title: 'Надійність', desc: 'Авто-калібрування та стабільна робота', color: '#7ec8a3' },
-    { icon: '🔇', title: 'Тихий друк', desc: 'Спеціальні драйвери для безшумної роботи', color: '#c9a84c' },
+    { 
+      icon: '⚡', 
+      title: 'Висока швидкість', 
+      desc: 'Друкує зі швидкістю до 500 мм/с завдяки потужній системі приводу та оптимізованим алгоритмам.', 
+      color: '#ff6b6b' 
+    },
+    { 
+      icon: '🎯', 
+      title: 'Висока точність', 
+      desc: 'Точність ±0.1 мм та висота шару від 0.05 мм забезпечують ідеальну деталізацію навіть для найдрібніших моделей.', 
+      color: '#4a9eff' 
+    },
+    { 
+      icon: '🔄', 
+      title: 'Автоматичне калібрування', 
+      desc: 'Система автоматичного вирівнювання стола та калібрування сопла забезпечують ідеальний перший шар без ручного налаштування.', 
+      color: '#7ec8a3' 
+    },
+    { 
+      icon: '🔇', 
+      title: 'Безшумна робота', 
+      desc: 'Спеціальні драйвери крокових двигунів та звукоізоляція роблять друк майже безшумним – ідеально для дому та офісу.', 
+      color: '#c9a84c' 
+    },
+    { 
+      icon: '📱', 
+      title: 'Керування через Wi-Fi', 
+      desc: 'Відстежуйте друк та керуйте принтером через додаток на смартфоні з будь-якої точки світу.', 
+      color: '#4a9eff' 
+    },
+    { 
+      icon: '🔋', 
+      title: 'Відновлення після вимкнення', 
+      desc: 'У разі відключення живлення принтер запам\'ятовує позицію та продовжує друк з місця зупинки.', 
+      color: '#ff6b6b' 
+    },
+    { 
+      icon: '🧵', 
+      title: 'Сенсор нитки', 
+      desc: 'Автоматичне виявлення закінчення або обриву нитки – друк зупиняється, ви чекаєте заміну та продовжуєте.', 
+      color: '#c9a84c' 
+    },
+    { 
+      icon: '🌡️', 
+      title: 'Контроль температури', 
+      desc: 'Підігрів стола до 100°C та сопла до 300°C дозволяють працювати з широким спектром матеріалів, включаючи інженерні пластики.', 
+      color: '#7ec8a3' 
+    },
   ];
 
   return (
@@ -48,10 +107,10 @@ export default function PrinterPage() {
           🖨️ Наше обладнання
         </motion.span>
         <h1 className="text-[#1a3c34] font-heading text-4xl md:text-5xl font-bold">
-          Наш 3D-принтер
+          Bambu Lab A1
         </h1>
         <p className="text-gray-500 text-lg max-w-2xl mx-auto mt-2">
-          Сучасне обладнання для якісного та швидкого друку
+          Сучасний 3D-принтер для професійного та домашнього використання
         </p>
       </motion.div>
 
@@ -68,7 +127,7 @@ export default function PrinterPage() {
           <div className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl shadow-[#1a3c34]/10 border-2 border-gray-200/50 group">
             <Image
               src="/images/printer/main.jpg"
-              alt="3D принтер"
+              alt="Bambu Lab A1 3D принтер"
               fill
               className={`object-cover transition-transform duration-700 ${
                 hoveredImage ? 'scale-105' : 'scale-100'
@@ -81,14 +140,14 @@ export default function PrinterPage() {
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border border-gray-200"
             >
-              <span className="text-sm font-bold text-[#1a3c34]">⚡ 180 мм/с</span>
+              <span className="text-sm font-bold text-[#1a3c34]">⚡ до 500 мм/с</span>
             </motion.div>
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
               className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border border-gray-200"
             >
-              <span className="text-sm font-bold text-[#1a3c34]">🎯 0.1 мм</span>
+              <span className="text-sm font-bold text-[#1a3c34]">🎯 ±0.1 мм</span>
             </motion.div>
           </div>
         </motion.div>
@@ -99,10 +158,12 @@ export default function PrinterPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="space-y-6"
         >
-          <h2 className="text-3xl font-bold text-[#1a3c34]">Ender-3 V3 SE</h2>
-          <p className="text-gray-500">
-            Потужний та надійний принтер для професійного 3D-друку. Ідеальний для 
-            створення прототипів, іграшок, деталей та багато іншого.
+          <h2 className="text-3xl font-bold text-[#1a3c34]">Bambu Lab A1</h2>
+          <p className="text-gray-500 leading-relaxed">
+            Потужний та надійний 3D-принтер для професійного друку. Ідеальний для 
+            створення прототипів, іграшок, функціональних деталей та багато іншого. 
+            Забезпечує високу швидкість друку до 500 мм/с, чудову якість та простоту 
+            у використанні завдяки автоматичному калібруванню та інтелектуальним функціям.
           </p>
 
           <div className="grid grid-cols-2 gap-3">
@@ -136,28 +197,28 @@ export default function PrinterPage() {
         </motion.div>
       </div>
 
-      {/* Детальні характеристики */}
+      {/* Повні технічні характеристики */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6, delay: 0.3 }}
         className="bg-gray-50 rounded-2xl p-8 border border-gray-100 mb-20"
       >
-        <h3 className="text-xl font-bold text-[#1a3c34] mb-6 text-center">
-          Детальні характеристики
+        <h3 className="text-2xl font-bold text-[#1a3c34] mb-6 text-center">
+          📊 Повні технічні характеристики
         </h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {detailedSpecs.map((spec, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, x: -10 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: 0.4 + idx * 0.06 }}
-              whileHover={{ scale: 1.02, backgroundColor: '#f8fafc' }}
-              className="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-200 transition-all cursor-pointer"
+              transition={{ delay: 0.4 + idx * 0.04 }}
+              whileHover={{ scale: 1.02, backgroundColor: '#ffffff' }}
+              className="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-200 transition-all cursor-pointer shadow-sm hover:shadow-md"
             >
-              <span className="text-sm text-gray-500">{spec.label}</span>
-              <span className="text-sm font-semibold text-[#1a3c34]">{spec.value}</span>
+              <span className="text-sm text-gray-500 font-medium">{spec.label}</span>
+              <span className="text-sm font-semibold text-[#1a3c34] text-right ml-4">{spec.value}</span>
             </motion.div>
           ))}
         </div>
@@ -167,12 +228,15 @@ export default function PrinterPage() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6, delay: 0.3 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
       >
-        <h2 className="text-center text-2xl font-bold text-[#1a3c34] mb-10">
-          Чому наш принтер найкращий?
+        <h2 className="text-center text-2xl font-bold text-[#1a3c34] mb-4">
+          Чому Bambu Lab A1 найкращий вибір?
         </h2>
-        <div className="grid md:grid-cols-4 gap-6">
+        <p className="text-center text-gray-500 text-sm mb-10 max-w-2xl mx-auto">
+          Поєднання швидкості, точності та надійності робить цей принтер ідеальним для будь-яких завдань
+        </p>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, idx) => (
             <motion.div
               key={idx}
@@ -192,13 +256,26 @@ export default function PrinterPage() {
               >
                 {feature.icon}
               </motion.div>
-              <h3 className="font-bold text-[#1a3c34]" style={{ color: feature.color }}>
+              <h3 className="font-bold text-[#1a3c34] text-lg" style={{ color: feature.color }}>
                 {feature.title}
               </h3>
-              <p className="text-sm text-gray-500 mt-1">{feature.desc}</p>
+              <p className="text-sm text-gray-500 mt-2 leading-relaxed">{feature.desc}</p>
             </motion.div>
           ))}
         </div>
+      </motion.div>
+
+      {/* Кнопка замовлення внизу */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="mt-16 text-center"
+      >
+        <p className="text-gray-500 text-sm mb-4">Готові замовити друк на цьому принтері?</p>
+        <Button href="/order" variant="primary" className="text-lg px-10 py-4">
+          Перейти до замовлення
+        </Button>
       </motion.div>
     </div>
   );

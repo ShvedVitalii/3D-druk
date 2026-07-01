@@ -49,7 +49,7 @@ export default function Pricing() {
 
   return (
     <>
-      <section ref={ref} className="py-20 bg-[#1a3c34] text-white relative overflow-hidden">
+      <section ref={ref} id="pricing" className="py-20 bg-[#1a3c34] text-white relative overflow-hidden">
         <div className="absolute inset-0 -z-10 opacity-10">
           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#7ec8a3]/30 to-transparent animate-pulse" />
           <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-tr from-[#c9a84c]/10 to-transparent animate-float" />
