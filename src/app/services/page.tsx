@@ -353,7 +353,7 @@ export default function ServicesPage() {
         options,
         originalPrice: Math.round(calculatedPrice * 1.2),
         calculatorData: {
-          fields: service.calculatorFields,
+          fields: service.calculatorFields as any, // виправлення TypeScript
           values: values,
           basePrice: basePrice,
         },
@@ -647,8 +647,8 @@ export default function ServicesPage() {
                                 onChange={(e) => handleCalculatorChange(field.key, Number(e.target.value))}
                                 className="w-full p-2.5 bg-white rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition text-sm"
                               >
-                                {field.options.map((opt) => (
-                                  <option key={opt.value} value={opt.value}>{opt.label} ({opt.value} ₴/г)</option>
+                                {field.options.map((opt, idx) => (
+                                  <option key={opt.label} value={opt.value}>{opt.label} ({opt.value} ₴/г)</option>
                                 ))}
                               </select>
                             </div>
