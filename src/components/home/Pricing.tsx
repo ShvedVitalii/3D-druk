@@ -4,49 +4,50 @@ import { useRef, useState } from 'react';
 import Button from '@/components/ui/Button';
 import CalculatorModal from '@/components/order/CalculatorModal';
 
-const pricingData = [
-  {
-    title: 'Орієнтовні ціни',
-    icon: '💰',
-    items: [
-      { label: 'PLA', value: 'від 0.5 грн/г' },
-      { label: 'ABS', value: 'від 0.6 грн/г' },
-      { label: 'PETG', value: 'від 0.7 грн/г' },
-      { label: 'TPU', value: 'від 1.0 грн/г' },
-    ],
-    footer: '*Точна ціна після узгодження моделі',
-    action: 'Розрахувати вартість',
-  },
-  {
-    title: 'Доставка',
-    icon: '🚚',
-    items: [
-      { label: 'Нова Пошта', value: '1-3 дні' },
-      { label: 'Укрпошта', value: '2-5 днів' },
-      { label: 'Самовивіз', value: 'Стрий' },
-    ],
-    footer: 'Вартість згідно з тарифами перевізника',
-    action: null,
-  },
-  {
-    title: 'Гарантії та акції',
-    icon: '✅',
-    items: [
-      { label: 'Якість', value: 'Перевірка кожного виробу' },
-      { label: 'Заміна', value: 'Безкоштовно при браку' },
-      { label: 'Консультація', value: 'Перед друком' },
-      { label: 'Акція', value: 'від 10 шт. – знижка 5%' },
-    ],
-    footer: 'Повернення браку – при відеофіксації розпаковки',
-    action: null,
-  },
-];
-
-export default function Pricing() {
+export default function Pricing({ data }: { data?: any[] }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
   const [calcOpen, setCalcOpen] = useState(false);
   const [activeCard, setActiveCard] = useState<number | null>(null);
+
+  // Дефолтні дані
+  const pricingData = data && data.length > 0 ? data : [
+    {
+      title: 'Орієнтовні ціни',
+      icon: '💰',
+      items: [
+        { label: 'PLA', value: 'від 0.5 грн/г' },
+        { label: 'ABS', value: 'від 0.6 грн/г' },
+        { label: 'PETG', value: 'від 0.7 грн/г' },
+        { label: 'TPU', value: 'від 1.0 грн/г' },
+      ],
+      footer: '*Точна ціна після узгодження моделі',
+      action: 'Розрахувати вартість',
+    },
+    {
+      title: 'Доставка',
+      icon: '🚚',
+      items: [
+        { label: 'Нова Пошта', value: '1-3 дні' },
+        { label: 'Укрпошта', value: '2-5 днів' },
+        { label: 'Самовивіз', value: 'Стрий' },
+      ],
+      footer: 'Вартість згідно з тарифами перевізника',
+      action: null,
+    },
+    {
+      title: 'Гарантії та акції',
+      icon: '✅',
+      items: [
+        { label: 'Якість', value: 'Перевірка кожного виробу' },
+        { label: 'Заміна', value: 'Безкоштовно при браку' },
+        { label: 'Консультація', value: 'Перед друком' },
+        { label: 'Акція', value: 'від 10 шт. – знижка 5%' },
+      ],
+      footer: 'Повернення браку – при відеофіксації розпаковки',
+      action: null,
+    },
+  ];
 
   return (
     <>
@@ -94,7 +95,7 @@ export default function Pricing() {
                   </div>
 
                   <ul className="space-y-2 text-gray-200">
-                    {block.items.map((item, i) => (
+                    {block.items.map((item: any, i: number) => (
                       <motion.li
                         key={i}
                         initial={{ opacity: 0, x: -10 }}

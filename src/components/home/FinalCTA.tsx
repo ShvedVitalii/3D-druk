@@ -3,9 +3,15 @@ import Button from '@/components/ui/Button';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 
-export default function FinalCTA() {
+export default function FinalCTA({ data }: { data?: any }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
+
+  const ctaData = data || {
+    title: 'Готові втілити ідею?',
+    subtitle: 'Надішліть файл моделі – розрахуємо вартість за 15 хвилин.',
+    buttonText: 'Замовити зараз',
+  };
 
   return (
     <section ref={ref} className="py-20 relative overflow-hidden bg-gradient-to-r from-[#1a3c34] to-[#2d5a4b]">
@@ -21,7 +27,7 @@ export default function FinalCTA() {
           transition={{ type: 'spring', damping: 15 }}
           className="mb-4 text-white text-4xl md:text-5xl"
         >
-          Готові втілити ідею?
+          {ctaData.title}
         </motion.h2>
         <motion.p
           initial={{ opacity: 0 }}
@@ -29,7 +35,7 @@ export default function FinalCTA() {
           transition={{ delay: 0.2 }}
           className="text-[#7ec8a3] mb-8 text-lg max-w-xl mx-auto"
         >
-          Надішліть файл моделі – розрахуємо вартість за 15 хвилин.
+          {ctaData.subtitle}
         </motion.p>
         <motion.div
           whileHover={{ scale: 1.05 }}
@@ -39,7 +45,7 @@ export default function FinalCTA() {
           transition={{ delay: 0.3 }}
         >
           <Button href="/order" variant="primary" className="text-lg px-10 py-4 bg-[#c9a84c] text-[#1a3c34] hover:bg-[#b89a3e] shadow-2xl shadow-[#c9a84c]/20">
-            Замовити зараз
+            {ctaData.buttonText}
           </Button>
         </motion.div>
         <div className="flex justify-center gap-6 mt-6 text-white/60 text-sm">

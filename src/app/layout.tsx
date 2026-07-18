@@ -4,6 +4,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PageTransition from '@/components/PageTransition';
 import AIConsultant from '@/components/ui/AIConsultant';
+import { supabaseAdmin } from '@/lib/supabase/server';
+import SessionProviderWrapper from '@/components/providers/SessionProviderWrapper';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
@@ -15,14 +17,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'uk_UA',
     siteName: '3D-друк',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: '3D-друк на замовлення',
-      },
-    ],
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: '3D-друк на замовлення' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,16 +27,29 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+async function getContacts() {
+  const { data } = await supabaseAdmin
+    .from('content')
+    .select('data')
+    .eq('key', 'contacts')
+    .single();
+  return data?.data || null;
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const contacts = await getContacts();
+
   return (
     <html lang="uk">
       <body>
-        <Header />
-        <main>
-          <PageTransition>{children}</PageTransition>
-        </main>
-        <Footer />
-        <AIConsultant />
+        <SessionProviderWrapper>
+          <Header />
+          <main>
+            <PageTransition>{children}</PageTransition>
+          </main>
+          <Footer contacts={contacts} />
+          <AIConsultant />
+        </SessionProviderWrapper>
       </body>
     </html>
   );

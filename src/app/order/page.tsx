@@ -112,21 +112,53 @@ export default function OrderPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) {
-      setStatus('Будь ласка, завантажте файл моделі або зображення');
-      return;
-    }
-    if (form.delivery !== 'pickup' && (!form.city.trim() || !form.warehouse.trim())) {
-      setStatus('Будь ласка, введіть місто та відділення');
-      return;
-    }
-    
-    setStatus('Надсилання...');
-    
-    setTimeout(() => {
-      setLastOrder({ ...form });
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!file) {
+    setStatus('Будь ласка, завантажте файл моделі або зображення');
+    return;
+  }
+  if (form.delivery !== 'pickup' && (!form.city.trim() || !form.warehouse.trim())) {
+    setStatus('Будь ласка, введіть місто та відділення');
+    return;
+  }
+  
+  setStatus('Надсилання...');
+
+  try {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer: {
+          name: form.name,
+          phone: form.phone,
+          email: form.email || '',
+          comment: form.description,
+        },
+        delivery: {
+          type: form.delivery,
+          city: form.city,
+          warehouse: form.warehouse,
+        },
+        items: [
+          {
+            title: '3D-друк на замовлення',
+            material,
+            weight,
+            infill,
+            perimeters,
+            layerHeight,
+            file: file?.name || '',
+            totalPrice: totalPrice,
+          },
+        ],
+        total: totalPrice,
+        source: 'form',
+      }),
+    });
+
+    if (res.ok) {
       setStatus('');
       setShowSuccess(true);
       setForm({ name: '', phone: '', email: '', delivery: 'nova', city: '', warehouse: '', description: '' });
@@ -134,8 +166,14 @@ export default function OrderPage() {
       setModelInfo(null);
       setAutoDetected(false);
       loadedRef.current = false;
-    }, 1500);
-  };
+    } else {
+      const data = await res.json();
+      setStatus(`❌ ${data.error || 'Помилка при надсиланні замовлення'}`);
+    }
+  } catch (e) {
+    setStatus('❌ Помилка з\'єднання. Перевірте інтернет.');
+  }
+};
 
   return (
     <div className="pt-32 pb-20 container-custom max-w-4xl mx-auto">

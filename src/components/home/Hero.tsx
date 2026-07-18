@@ -205,9 +205,16 @@ const newGenItems = [
 // =========================
 // 5. Головний компонент Hero
 // =========================
-export default function Hero() {
+export default function Hero({ data }: { data?: any }) {
   const [calcOpen, setCalcOpen] = useState(false);
   const [showNewGenModal, setShowNewGenModal] = useState(false);
+
+  // Дефолтні значення, якщо data відсутня
+  const heroData = data || {
+    title: 'Ваші ідеї у 3D',
+    subtitle: 'Професійний 3D-друк на замовлення. Швидко, якісно, доступно. Допомагаємо ЗСУ – друкуємо адаптери, кріплення та тактичні аксесуари.',
+    buttonText: 'Замовити друк'
+  };
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -269,7 +276,7 @@ export default function Hero() {
 
             <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-6">
               Втілюємо <br />
-              <TypewriterText text="Ваші ідеї у 3D" className="text-[#7ec8a3]" />
+              <TypewriterText text={heroData.title} className="text-[#7ec8a3]" />
             </h1>
 
             <motion.p
@@ -278,8 +285,7 @@ export default function Hero() {
               transition={{ delay: 0.6 }}
               className="text-xl text-gray-300 max-w-lg mb-8"
             >
-              Професійний 3D-друк на замовлення. Швидко, якісно, доступно.
-              Допомагаємо ЗСУ – друкуємо адаптери, кріплення та тактичні аксесуари.
+              {heroData.subtitle}
             </motion.p>
 
             <motion.div
@@ -289,7 +295,7 @@ export default function Hero() {
               className="flex flex-wrap gap-4 items-center"
             >
               <Button href="/order" variant="primary" className="group relative overflow-hidden">
-                <span className="relative z-10">Замовити друк</span>
+                <span className="relative z-10">{heroData.buttonText}</span>
                 <span className="absolute inset-0 bg-white/20 scale-0 group-hover:scale-100 rounded-full transition-transform duration-500" />
               </Button>
 
@@ -301,7 +307,6 @@ export default function Hero() {
                 Розрахувати вартість
               </Button>
 
-              {/* Кнопка "Розробка авторських моделей" – відкриває модалку */}
               <Button
                 onClick={() => setShowNewGenModal(true)}
                 variant="primary"

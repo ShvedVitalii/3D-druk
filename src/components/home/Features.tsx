@@ -2,55 +2,56 @@
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
 
-const features = [
-  {
-    icon: '⚡',
-    title: 'Швидкість',
-    shortDesc: 'Друк від 1 дня',
-    longDesc: 'Ми використовуємо сучасні принтери, що дозволяє друкувати вироби за лічені години. Термінові замовлення виконуємо за 24 години.',
-    color: 'bg-green-100 text-green-700',
-  },
-  {
-    icon: '🎯',
-    title: 'Точність',
-    shortDesc: 'Висота шару 0.1 мм',
-    longDesc: 'Деталізація на рівні 0.1 мм забезпечує ідеальну якість поверхні та точність геометрії, що важливо для прототипів та дрібних деталей.',
-    color: 'bg-blue-100 text-blue-700',
-  },
-  {
-    icon: '🧵',
-    title: 'Матеріали',
-    shortDesc: 'PLA, ABS, PETG, TPU',
-    longDesc: 'Працюємо з різними пластиками: PLA для екологічних виробів, ABS для міцних деталей, PETG для хімічно стійких, TPU для гнучких.',
-    color: 'bg-purple-100 text-purple-700',
-  },
-  {
-    icon: '💰',
-    title: 'Доступно',
-    shortDesc: 'Ціни від 4 грн/см³',
-    longDesc: 'Ми пропонуємо конкурентні ціни на всі види друку. Для оптових замовлень діють знижки. Завжди розраховуємо індивідуально.',
-    color: 'bg-amber-100 text-amber-700',
-  },
-  {
-    icon: '📦',
-    title: 'Доставка',
-    shortDesc: 'Нова Пошта, Укрпошта',
-    longDesc: 'Відправляємо по всій Україні Новою Поштою (1-3 дні) або Укрпоштою (2-5 днів). Також можливий самовивіз з нашого офісу у Стрию.',
-    color: 'bg-rose-100 text-rose-700',
-  },
-  {
-    icon: '🇺🇦',
-    title: 'Допомога ЗСУ',
-    shortDesc: 'Адаптери, кріплення',
-    longDesc: 'На волонтерських засадах друкуємо адаптери, кріплення, тактичні аксесуари та інші деталі для потреб Збройних Сил України.',
-    color: 'bg-indigo-100 text-indigo-700',
-  },
-];
-
-export default function Features() {
+export default function Features({ data }: { data?: any[] }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  // Дефолтні дані, якщо data відсутня
+  const featuresData = data && data.length > 0 ? data : [
+    {
+      icon: '⚡',
+      title: 'Швидкість',
+      shortDesc: 'Друк від 1 дня',
+      longDesc: 'Ми використовуємо сучасні принтери, що дозволяє друкувати вироби за лічені години. Термінові замовлення виконуємо за 24 години.',
+      color: 'bg-green-100 text-green-700',
+    },
+    {
+      icon: '🎯',
+      title: 'Точність',
+      shortDesc: 'Висота шару 0.1 мм',
+      longDesc: 'Деталізація на рівні 0.1 мм забезпечує ідеальну якість поверхні та точність геометрії, що важливо для прототипів та дрібних деталей.',
+      color: 'bg-blue-100 text-blue-700',
+    },
+    {
+      icon: '🧵',
+      title: 'Матеріали',
+      shortDesc: 'PLA, ABS, PETG, TPU',
+      longDesc: 'Працюємо з різними пластиками: PLA для екологічних виробів, ABS для міцних деталей, PETG для хімічно стійких, TPU для гнучких.',
+      color: 'bg-purple-100 text-purple-700',
+    },
+    {
+      icon: '💰',
+      title: 'Доступно',
+      shortDesc: 'Ціни від 4 грн/см³',
+      longDesc: 'Ми пропонуємо конкурентні ціни на всі види друку. Для оптових замовлень діють знижки. Завжди розраховуємо індивідуально.',
+      color: 'bg-amber-100 text-amber-700',
+    },
+    {
+      icon: '📦',
+      title: 'Доставка',
+      shortDesc: 'Нова Пошта, Укрпошта',
+      longDesc: 'Відправляємо по всій Україні Новою Поштою (1-3 дні) або Укрпоштою (2-5 днів). Також можливий самовивіз з нашого офісу у Стрию.',
+      color: 'bg-rose-100 text-rose-700',
+    },
+    {
+      icon: '🇺🇦',
+      title: 'Допомога ЗСУ',
+      shortDesc: 'Адаптери, кріплення',
+      longDesc: 'На волонтерських засадах друкуємо адаптери, кріплення, тактичні аксесуари та інші деталі для потреб Збройних Сил України.',
+      color: 'bg-indigo-100 text-indigo-700',
+    },
+  ];
 
   const toggleFeature = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
@@ -71,7 +72,7 @@ export default function Features() {
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {features.map((f, idx) => (
+          {featuresData.map((f, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 30 }}
@@ -88,8 +89,8 @@ export default function Features() {
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-start gap-4">
-                  <div className={`w-14 h-14 rounded-xl ${f.color} flex items-center justify-center text-3xl flex-shrink-0`}>
-                    {f.icon}
+                  <div className={`w-14 h-14 rounded-xl ${f.color || 'bg-gray-200'} flex items-center justify-center text-3xl flex-shrink-0`}>
+                    {f.icon || '📌'}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-gray-800">{f.title}</h3>

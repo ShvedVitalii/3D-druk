@@ -264,30 +264,61 @@ export default function CartPage() {
     setEditingItem(null);
   };
 
-  const handleCheckout = async () => {
-    if (!orderForm.name.trim() || !orderForm.phone.trim()) {
-      alert('Будь ласка, заповніть ім\'я та телефон');
-      return;
+const handleCheckout = async () => {
+  if (!orderForm.name.trim() || !orderForm.phone.trim()) {
+    alert('Будь ласка, заповніть ім\'я та телефон');
+    return;
+  }
+  if (delivery.deliveryType !== 'pickup' && (!delivery.city.trim() || !delivery.warehouse.trim())) {
+    alert('Будь ласка, введіть місто та відділення');
+    return;
+  }
+  
+  setIsSubmitting(true);
+
+  try {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer: {
+          name: orderForm.name,
+          phone: orderForm.phone,
+          email: orderForm.email || '',
+          comment: orderForm.comment,
+        },
+        delivery: {
+          type: delivery.deliveryType,
+          city: delivery.city,
+          warehouse: delivery.warehouse,
+        },
+        items: items.map(item => ({
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          options: item.options || {},
+          category: item.category,
+        })),
+        total: total,
+        source: 'cart',
+      }),
+    });
+
+    if (res.ok) {
+      alert(`✅ Замовлення на ${total} ₴ оформлено!`);
+      clearCart();
+      // Можна перенаправити на сторінку подяки
+      // router.push('/thank-you');
+    } else {
+      const data = await res.json();
+      alert(`❌ Помилка: ${data.error || 'Спробуйте пізніше'}`);
     }
-    if (delivery.deliveryType !== 'pickup' && (!delivery.city.trim() || !delivery.warehouse.trim())) {
-      alert('Будь ласка, введіть місто та відділення');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const orderData = {
-      items,
-      total: total,
-      delivery,
-      customer: orderForm,
-    };
-    console.log('📦 Замовлення:', orderData);
-    alert(`✅ Замовлення на ${total} ₴ оформлено!`);
+  } catch (e) {
+    alert('❌ Помилка з\'єднання. Перевірте інтернет.');
+  } finally {
     setIsSubmitting(false);
-    clearCart();
-  };
+  }
+};
 
   // Покращена функція визначення зображення
   const getItemImage = (item: any) => {
