@@ -10,10 +10,24 @@ import FAQ from '@/components/home/FAQ';
 import Contact from '@/components/home/Contact';
 import FinalCTA from '@/components/home/FinalCTA';
 
-async function getContent() {
+// Визначаємо тип для вмісту, щоб уникнути помилок TypeScript
+type Content = {
+  hero?: any;
+  features?: any[];
+  materials?: any[];
+  process?: any[];
+  pricing?: any[];
+  gallery?: any[];
+  testimonials?: any[];
+  faq?: any[];
+  contacts?: any;
+  finalCTA?: any;
+};
+
+async function getContent(): Promise<Content> {
   const { data } = await supabaseAdmin.from('content').select('key, data');
   if (!data) return {};
-  return data.reduce((acc, item) => ({ ...acc, [item.key]: item.data }), {});
+  return data.reduce<Content>((acc, item) => ({ ...acc, [item.key]: item.data }), {});
 }
 
 export default async function Home() {
