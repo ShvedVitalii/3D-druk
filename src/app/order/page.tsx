@@ -116,7 +116,6 @@ export default function OrderPage() {
       setAutoDetected(false);
       loadedRef.current = false;
     }
-    // Очищаємо помилку файлу при виборі
     if (errors.file) setErrors({ ...errors, file: undefined });
   };
 
@@ -148,9 +147,7 @@ export default function OrderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Валідація
     if (!validateForm()) {
-      // Прокрутка до першого поля з помилкою
       const firstError = document.querySelector('.border-red-500');
       if (firstError) {
         firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -163,6 +160,30 @@ export default function OrderPage() {
     setStatus('Надсилання...');
 
     try {
+      let fileUrl = '';
+      let fileName = '';
+
+      // Завантажуємо файл, якщо він є
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json();
+          throw new Error(errData.error || 'Помилка завантаження файлу');
+        }
+
+        const uploadData = await uploadRes.json();
+        fileUrl = uploadData.fileUrl;
+        fileName = uploadData.fileName;
+      }
+
+      // Відправляємо замовлення з URL файлу
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,7 +207,8 @@ export default function OrderPage() {
               infill,
               perimeters,
               layerHeight,
-              file: file?.name || '',
+              file: fileUrl || file?.name || '',
+              fileName: fileName || file?.name || '',
               totalPrice: totalPrice,
             },
           ],
@@ -197,7 +219,6 @@ export default function OrderPage() {
 
       if (res.ok) {
         const data = await res.json();
-        // Зберігаємо дані замовлення для чека
         const orderData = {
           id: data.id || `ORDER-${Date.now()}`,
           customer: {
@@ -219,7 +240,8 @@ export default function OrderPage() {
               infill,
               perimeters,
               layerHeight,
-              file: file?.name || '',
+              file: fileUrl || file?.name || '',
+              fileName: fileName || file?.name || '',
               price: totalPrice,
               quantity: 1,
             },
@@ -236,11 +258,11 @@ export default function OrderPage() {
         loadedRef.current = false;
         router.push('/order-confirmation');
       } else {
-        const data = await res.json();
-        setStatus(`❌ ${data.error || 'Помилка при надсиланні замовлення'}`);
+        const errData = await res.json();
+        setStatus(`❌ ${errData.error || 'Помилка при надсиланні замовлення'}`);
       }
-    } catch (e) {
-      setStatus('❌ Помилка з\'єднання. Перевірте інтернет.');
+    } catch (e: any) {
+      setStatus(`❌ ${e.message || 'Помилка з\'єднання. Перевірте інтернет.'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -276,9 +298,7 @@ export default function OrderPage() {
                   errors.name ? 'border-red-500 ring-2 ring-red-500/30' : 'border-gray-200'
                 } focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition`}
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-              )}
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Телефон *</label>
@@ -294,9 +314,7 @@ export default function OrderPage() {
                   errors.phone ? 'border-red-500 ring-2 ring-red-500/30' : 'border-gray-200'
                 } focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition`}
               />
-              {errors.phone && (
-                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-              )}
+              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
             </div>
           </div>
 
@@ -326,7 +344,6 @@ export default function OrderPage() {
                   warehouse: val.warehouse,
                   delivery: val.deliveryType,
                 });
-                // Очищаємо помилки доставки при зміні
                 if (errors.city || errors.warehouse) {
                   setErrors({ ...errors, city: undefined, warehouse: undefined });
                 }
@@ -334,12 +351,8 @@ export default function OrderPage() {
             />
             {form.delivery !== 'pickup' && (
               <div className="mt-2">
-                {errors.city && (
-                  <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-                )}
-                {errors.warehouse && (
-                  <p className="text-red-500 text-sm mt-1">{errors.warehouse}</p>
-                )}
+                {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                {errors.warehouse && <p className="text-red-500 text-sm mt-1">{errors.warehouse}</p>}
               </div>
             )}
           </div>
@@ -359,9 +372,7 @@ export default function OrderPage() {
             <h4 className="font-semibold text-[#1a3c34] flex items-center gap-2">
               Параметри друку
               {autoDetected && (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                  🎯 Авто
-                </span>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">🎯 Авто</span>
               )}
             </h4>
             <div className="grid grid-cols-2 gap-4">
@@ -391,9 +402,7 @@ export default function OrderPage() {
                   className="w-full p-2 bg-white rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 />
                 {autoDetected && modelInfo && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Оцінено з моделі: ~{(modelInfo.volume * 1.24).toFixed(1)} г
-                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Оцінено з моделі: ~{(modelInfo.volume * 1.24).toFixed(1)} г</p>
                 )}
               </div>
               <div>
@@ -455,9 +464,7 @@ export default function OrderPage() {
                   <option value={0.3}>0.3 (швидкий)</option>
                 </select>
                 {autoDetected && modelInfo && (
-                  <p className="text-xs text-green-600 mt-1">
-                    рекомендовано: {getRecommendedLayerHeight(modelInfo)} мм
-                  </p>
+                  <p className="text-xs text-green-600 mt-1">рекомендовано: {getRecommendedLayerHeight(modelInfo)} мм</p>
                 )}
               </div>
             </div>
@@ -472,9 +479,7 @@ export default function OrderPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Файл моделі або фото *</label>
             <FileUpload key={file ? 'has-file' : 'no-file'} onFileSelect={handleFileSelect} />
             {file && <p className="text-[#1a3c34] text-sm mt-2">✅ Вибрано: {file.name}</p>}
-            {errors.file && (
-              <p className="text-red-500 text-sm mt-1">{errors.file}</p>
-            )}
+            {errors.file && <p className="text-red-500 text-sm mt-1">{errors.file}</p>}
           </div>
 
           {file && (

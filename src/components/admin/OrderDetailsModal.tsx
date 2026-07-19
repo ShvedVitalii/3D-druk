@@ -10,11 +10,17 @@ interface OrderDetailsModalProps {
 export default function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
   if (!order) return null;
 
-  const handleDownload = (fileUrl: string) => {
-    if (fileUrl) {
+const handleDownload = (fileUrl: string) => {
+  if (fileUrl) {
+    // Якщо це повний URL з Supabase – відкриваємо
+    if (fileUrl.startsWith('http')) {
+      window.open(fileUrl, '_blank');
+    } else {
+      // Якщо старий формат (тільки назва) – пробуємо відкрити
       window.open(`/uploads/${fileUrl}`, '_blank');
     }
-  };
+  }
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>

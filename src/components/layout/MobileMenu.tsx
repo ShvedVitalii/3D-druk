@@ -119,7 +119,7 @@ export default function MobileMenu({ isOpen, onClose, links }: { isOpen: boolean
                 </Link>
               </motion.div>
 
-              {/* Замовити */}
+              {/* Замовити - змінено: прибрано крапку, текст по центру */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -128,15 +128,12 @@ export default function MobileMenu({ isOpen, onClose, links }: { isOpen: boolean
                 <Link
                   href="/order"
                   onClick={onClose}
-                  className={`flex items-center gap-3 text-lg font-medium transition-colors py-3 px-4 rounded-xl group ${
+                  className={`flex items-center justify-center text-lg font-medium transition-colors py-3 px-4 rounded-xl ${
                     pathname === '/order' 
                       ? 'bg-[#c9a84c] text-white' 
                       : 'bg-[#1a3c34] text-white hover:bg-[#2d5a4b]'
                   }`}
                 >
-                  <span className={`h-2 w-2 rounded-full transition-all ${
-                    pathname === '/order' ? 'bg-white w-3' : 'bg-[#c9a84c]'
-                  }`} />
                   Замовити
                 </Link>
               </motion.div>
