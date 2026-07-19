@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server';
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { status } = await req.json();
-    const { id } = params;
+    const { id } = await params;
     const { error } = await supabaseAdmin
       .from('orders')
       .update({ status })
@@ -22,10 +22,10 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { error } = await supabaseAdmin
       .from('orders')
       .delete()
