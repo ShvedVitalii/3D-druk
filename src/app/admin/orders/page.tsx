@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabaseAdmin } from '@/lib/supabase/server'; // ← зміна імпорту
 
 type Order = {
   id: string;
@@ -26,12 +25,10 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabaseAdmin
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setOrders(data || []);
+      const res = await fetch('/api/admin/orders');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setOrders(data);
     } catch (err) {
       setError('Не вдалося завантажити заявки');
       console.error(err);
@@ -42,11 +39,12 @@ export default function AdminOrders() {
 
   const updateStatus = async (id: string, status: Order['status']) => {
     try {
-      const { error } = await supabaseAdmin
-        .from('orders')
-        .update({ status })
-        .eq('id', id);
-      if (error) throw error;
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error('Failed to update');
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
     } catch (err) {
       alert('Помилка оновлення статусу');
@@ -56,11 +54,8 @@ export default function AdminOrders() {
   const deleteOrder = async (id: string) => {
     if (!confirm('Ви впевнені, що хочете видалити це замовлення?')) return;
     try {
-      const { error } = await supabaseAdmin
-        .from('orders')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
+      const res = await fetch(`/api/admin/orders/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
       setOrders(prev => prev.filter(o => o.id !== id));
     } catch (err) {
       alert('Помилка видалення');
@@ -75,7 +70,6 @@ export default function AdminOrders() {
   return (
     <div>
       <h1 className="text-3xl font-bold text-[#1a3c34] mb-6">Заявки та замовлення</h1>
-
       <div className="flex flex-wrap gap-2 mb-6">
         {['all', 'pending', 'accepted', 'rejected', 'sent'].map(status => (
           <button
@@ -94,7 +88,6 @@ export default function AdminOrders() {
           </button>
         ))}
       </div>
-
       <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -163,9 +156,7 @@ export default function AdminOrders() {
               ))}
               {filteredOrders.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-400">
-                    Заявок немає
-                  </td>
+                  <td colSpan={6} className="p-8 text-center text-gray-400">Заявок немає</td>
                 </tr>
               )}
             </tbody>

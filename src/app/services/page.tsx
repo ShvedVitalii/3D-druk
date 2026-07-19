@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
+import ContactButton from '@/components/ui/ContactButton';
 
-// Вимкнути кешування
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -28,7 +28,6 @@ export default async function ServicesPage() {
         </div>
       </div>
 
-      {/* Категорії та фільтри – якщо потрібно, можна додати */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
         {services
           .filter((s: any) => !s.hidden)
@@ -99,12 +98,7 @@ export default async function ServicesPage() {
 
       <div className="mt-12 text-center">
         <p className="text-gray-500 text-sm mb-4">Не знайшли потрібну послугу?</p>
-        <button
-          onClick={() => window.location.href = '/contacts'}
-          className="px-6 py-2.5 rounded-full border-2 border-[#c9a84c] text-[#c9a84c] text-sm font-medium hover:bg-[#c9a84c] hover:text-white transition-all duration-300"
-        >
-          Зв'язатися з нами
-        </button>
+        <ContactButton />
       </div>
     </div>
   );
