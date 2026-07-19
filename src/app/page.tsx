@@ -10,7 +10,7 @@ import FAQ from '@/components/home/FAQ';
 import Contact from '@/components/home/Contact';
 import FinalCTA from '@/components/home/FinalCTA';
 
-// Визначаємо тип для вмісту, щоб уникнути помилок TypeScript
+// Тип для контенту
 type Content = {
   hero?: any;
   features?: any[];
