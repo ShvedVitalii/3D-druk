@@ -4,31 +4,55 @@ import Image from 'next/image';
 
 interface FileUploadProps {
   onFileSelect: (file: File | null) => void;
+  accept?: string; // наприклад: '.stl,.obj,.3mf'
+  maxSize?: number; // в байтах
+  allowedExtensions?: string[]; // масив розширень без крапки
+  label?: string;
+  required?: boolean;
 }
 
-// Список підтримуваних 3D-форматів (для перегляду)
-const supportedExtensions = ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx'];
-// Додаткові формати для завантаження (наприклад, зображення, архіви) – їх можна завантажити, але 3D-перегляд недоступний
-// Для простоти обмежуємо лише підтримуваними, щоб уникнути помилок
-const allowedExtensions = supportedExtensions;
-
-export default function FileUpload({ onFileSelect }: FileUploadProps) {
+export default function FileUpload({
+  onFileSelect,
+  accept = '*/*',
+  maxSize = 50 * 1024 * 1024, // 50MB за замовчуванням
+  allowedExtensions = [],
+  label = 'Перетягніть файл або клікніть для вибору',
+  required = false,
+}: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleFile = (file: File) => {
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    if (!ext || !allowedExtensions.includes(ext)) {
-      alert(
-        `Будь ласка, завантажте файл у форматі: ${supportedExtensions.join(', ')}.\nАрхіви (RAR, ZIP) не підтримуються – розпакуйте їх перед завантаженням.`
-      );
-      return;
+  const validateFile = (file: File): boolean => {
+    setError(null);
+    
+    // Перевірка розміру
+    if (file.size > maxSize) {
+      const maxMB = Math.round(maxSize / (1024 * 1024));
+      setError(`Файл занадто великий. Максимальний розмір: ${maxMB} МБ`);
+      return false;
     }
 
-    if (file.size > 100 * 1024 * 1024) {
-      alert('Файл занадто великий. Максимальний розмір – 100MB');
+    // Перевірка розширення
+    if (allowedExtensions.length > 0) {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!ext || !allowedExtensions.includes(ext)) {
+        setError(`Дозволені формати: ${allowedExtensions.join(', ')}`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleFile = (file: File) => {
+    if (!validateFile(file)) {
+      onFileSelect(null);
+      setFileName(null);
+      setPreview(null);
+      if (inputRef.current) inputRef.current.value = '';
       return;
     }
 
@@ -36,8 +60,9 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
     setFileName(file.name);
 
     // Для зображень – показуємо прев'ю
-    const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-    if (imageExtensions.includes(ext)) {
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'];
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext && imageExtensions.includes(ext)) {
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreview(e.target?.result as string);
@@ -52,6 +77,7 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
     onFileSelect(null);
     setFileName(null);
     setPreview(null);
+    setError(null);
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -62,7 +88,7 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
       <div
         className={`border-2 border-dashed rounded-xl p-6 text-center transition cursor-pointer ${
           dragActive ? 'border-[#c9a84c] bg-[#c9a84c]/10' : 'border-gray-300 bg-gray-50 hover:border-[#c9a84c]'
-        }`}
+        } ${error ? 'border-red-500 bg-red-50' : ''}`}
         onDragEnter={() => setDragActive(true)}
         onDragLeave={() => setDragActive(false)}
         onDragOver={(e) => e.preventDefault()}
@@ -76,17 +102,21 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
         <input
           ref={inputRef}
           type="file"
-          accept={`.${supportedExtensions.join(',.')}`}
+          accept={accept}
           onChange={(e) => e.target.files && handleFile(e.target.files[0])}
           className="hidden"
+          required={required}
         />
 
         {!fileName ? (
           <div className="flex flex-col items-center gap-2 py-4">
             <span className="text-5xl">📁</span>
-            <p className="text-gray-600 font-medium">Перетягніть файл або клікніть для вибору</p>
-            <p className="text-gray-400 text-sm">
-              {supportedExtensions.map(e => `.${e}`).join(', ')}
+            <p className="text-gray-600 font-medium">{label}</p>
+            {allowedExtensions.length > 0 && (
+              <p className="text-gray-400 text-sm">Дозволені формати: {allowedExtensions.join(', ')}</p>
+            )}
+            <p className="text-gray-400 text-xs">
+              Максимальний розмір: {Math.round(maxSize / (1024 * 1024))} МБ
             </p>
           </div>
         ) : (
@@ -117,6 +147,7 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
           </div>
         )}
       </div>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 }

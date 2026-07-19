@@ -5,6 +5,22 @@ import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/store/cartStore';
 import FileUpload from '@/components/forms/FileUpload';
 
+// Мапа дозволених форматів для кожної послуги (за ID)
+const serviceFileConfig: Record<number, { allowedExtensions: string[]; maxSize: number }> = {
+  1: { allowedExtensions: ['stl', 'obj', '3mf', 'step', 'iges', 'stp'], maxSize: 50 * 1024 * 1024 },
+  2: { allowedExtensions: ['stl', 'obj', '3mf', 'step', 'iges', 'stp'], maxSize: 50 * 1024 * 1024 },
+  3: { allowedExtensions: ['png', 'jpg', 'jpeg', 'svg', 'ai', 'eps', 'pdf'], maxSize: 50 * 1024 * 1024 },
+  4: { allowedExtensions: ['jpg', 'png', 'pdf'], maxSize: 50 * 1024 * 1024 },
+  5: { allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png'], maxSize: 50 * 1024 * 1024 },
+  6: { allowedExtensions: ['stl', 'obj', '3mf', 'step'], maxSize: 50 * 1024 * 1024 },
+  7: { allowedExtensions: ['stl', 'obj', '3mf', 'step'], maxSize: 50 * 1024 * 1024 },
+  8: { allowedExtensions: ['stl', 'obj', 'ply', 'xyz'], maxSize: 50 * 1024 * 1024 },
+  9: { allowedExtensions: ['pdf', 'jpg', 'png'], maxSize: 50 * 1024 * 1024 },
+  10: { allowedExtensions: ['svg', 'png', 'jpg', 'pdf'], maxSize: 50 * 1024 * 1024 },
+  11: { allowedExtensions: ['jpg', 'png', 'pdf'], maxSize: 50 * 1024 * 1024 },
+  12: { allowedExtensions: ['pdf', 'jpg', 'png', 'stl'], maxSize: 50 * 1024 * 1024 },
+};
+
 export default function ServicesPage() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +32,8 @@ export default function ServicesPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
   const addItem = useCartStore((state) => state.addItem);
@@ -46,7 +64,6 @@ export default function ServicesPage() {
     if (selectedService && selectedService.hasCalculator) {
       calculatePrice(selectedService);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [calculatorValues, selectedService]);
 
   const filtered = selectedCategory === 'Всі'
@@ -89,11 +106,76 @@ export default function ServicesPage() {
     setCalculatedPrice(total);
   };
 
-  const addToCartWithOptions = (service: any) => {
+  // Завантаження файлу на сервер (Supabase Storage)
+  const uploadFile = async (file: File): Promise<string> => {
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Використовуємо XMLHttpRequest для відстеження прогресу
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload');
+
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const progress = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(progress);
+          }
+        });
+
+        xhr.onload = () => {
+          setIsUploading(false);
+          if (xhr.status === 200) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              resolve(data.fileUrl);
+            } catch (e) {
+              reject(new Error('Помилка обробки відповіді сервера'));
+            }
+          } else {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              reject(new Error(data.error || 'Помилка завантаження файлу'));
+            } catch (e) {
+              reject(new Error(`Помилка завантаження: ${xhr.status}`));
+            }
+          }
+        };
+
+        xhr.onerror = () => {
+          setIsUploading(false);
+          reject(new Error('Помилка з\'єднання'));
+        };
+
+        xhr.send(formData);
+      });
+    } catch (e) {
+      setIsUploading(false);
+      throw e;
+    }
+  };
+
+  const addToCartWithOptions = async (service: any) => {
+    // Якщо послуга має завантаження файлів і файл вибрано – завантажуємо
+    let fileUrl = '';
+    if (service.hasFileUpload !== false && uploadedFile) {
+      try {
+        fileUrl = await uploadFile(uploadedFile);
+        showToastMessage(`✅ Файл ${uploadedFile.name} завантажено!`);
+      } catch (err: any) {
+        showToastMessage(`❌ ${err.message}`);
+        return;
+      }
+    }
+
     if (!service.hasCalculator || !service.calculatorFields) {
       const options: Record<string, any> = {};
       if (additionalInfo.trim()) options['Додаткова інформація'] = additionalInfo.trim();
-      if (uploadedFile) options['Файл'] = uploadedFile.name;
+      if (fileUrl) options['Файл'] = fileUrl;
       addItem({
         id: `service-${service.id}-${Date.now()}`,
         title: service.title,
@@ -130,7 +212,7 @@ export default function ServicesPage() {
     });
 
     if (additionalInfo.trim()) options['Додаткова інформація'] = additionalInfo.trim();
-    if (uploadedFile) options['Файл'] = uploadedFile.name;
+    if (fileUrl) options['Файл'] = fileUrl;
 
     let basePrice = service.priceValue || 0;
     service.calculatorFields.forEach((field: any) => {
@@ -183,6 +265,8 @@ export default function ServicesPage() {
     setCalculatedPrice(null);
     setAdditionalInfo('');
     setUploadedFile(null);
+    setUploadProgress(0);
+    setIsUploading(false);
     if (service.hasCalculator && service.calculatorFields) {
       setTimeout(() => calculatePrice(service), 50);
     }
@@ -197,7 +281,8 @@ export default function ServicesPage() {
   }
 
   return (
-<div ref={ref} className="pt-32 pb-20 container-custom max-w-6xl mx-auto bg-white">      {/* Toast */}
+    <div ref={ref} className="pt-32 pb-20 container-custom max-w-6xl mx-auto bg-white">
+      {/* Toast */}
       <AnimatePresence>
         {showToast && (
           <motion.div
@@ -222,24 +307,18 @@ export default function ServicesPage() {
       </AnimatePresence>
 
       {/* Заголовок */}
-      {/* Заголовок */}
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true, margin: '-50px' }}
-  transition={{ duration: 0.6 }}
-  className="text-center mb-12"
->
-  <h1 className="text-4xl md:text-5xl font-heading font-bold text-black">
-    Наші послуги
-  </h1>
-  <p className="text-lg text-gray-800 max-w-2xl mx-auto mt-2">
-    Оберіть послугу та замовте 3D-друк
-  </p>
-  <div className="mt-4 inline-block bg-gray-100 px-6 py-2 rounded-full text-sm text-gray-700 border border-gray-200">
-    📐 Макс. розмір моделі: 25,6 × 25,6 × 25,6 см
-  </div>
-</motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.6 }}
+        className="text-center mb-12"
+      >
+        <h1 className="text-4xl md:text-5xl font-heading font-bold text-black">Наші послуги</h1>
+        <p className="text-lg text-gray-800 max-w-2xl mx-auto mt-2">Оберіть послугу та замовте 3D-друк</p>
+        <div className="mt-4 inline-block bg-gray-100 px-6 py-2 rounded-full text-sm text-gray-700 border border-gray-200">
+          📐 Макс. розмір моделі: 25,6 × 25,6 × 25,6 см
+        </div>
+      </motion.div>
 
       {/* Фільтри категорій */}
       {categories.length > 1 && (
@@ -324,10 +403,8 @@ export default function ServicesPage() {
                     </span>
                   </div>
 
-                  {/* Блок кнопок */}
                   <div className="flex gap-2">
                     {service.id === 1 ? (
-                      // Для "3D-друк моделей" – тільки кнопка "Замовити" на всю ширину
                       <button
                         onClick={() => window.location.href = '/order'}
                         className="w-full px-4 py-2 text-xs font-semibold rounded-lg bg-[#1a3c34] text-white hover:bg-[#2d5a4b] transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1"
@@ -371,20 +448,19 @@ export default function ServicesPage() {
       )}
 
       <motion.div
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true, margin: '-50px' }}
-  transition={{ duration: 0.5, delay: 0.3 }}
-  className="mt-12 text-center"
->
-  <p className="text-gray-700 text-sm mb-4">Не знайшли потрібну послугу?</p>
-  <button
-    onClick={() => window.location.href = '/contacts'}
-    className="px-6 py-2.5 rounded-full border-2 border-[#c9a84c] text-[#c9a84c] text-sm font-medium hover:bg-[#c9a84c] hover:text-white transition-all duration-300"
-  >
-    Зв'язатися з нами
-  </button>
-</motion.div>
+        initial={{ opacity: 0, y: 20 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="mt-12 text-center"
+      >
+        <p className="text-gray-700 text-sm mb-4">Не знайшли потрібну послугу?</p>
+        <button
+          onClick={() => window.location.href = '/contacts'}
+          className="px-6 py-2.5 rounded-full border-2 border-[#c9a84c] text-[#c9a84c] text-sm font-medium hover:bg-[#c9a84c] hover:text-white transition-all duration-300"
+        >
+          Зв'язатися з нами
+        </button>
+      </motion.div>
 
       {/* ==================== МОДАЛЬНЕ ВІКНО ==================== */}
       <AnimatePresence>
@@ -397,6 +473,8 @@ export default function ServicesPage() {
               setCalculatedPrice(null);
               setAdditionalInfo('');
               setUploadedFile(null);
+              setUploadProgress(0);
+              setIsUploading(false);
             }}
           >
             <motion.div
@@ -429,6 +507,8 @@ export default function ServicesPage() {
                     setCalculatedPrice(null);
                     setAdditionalInfo('');
                     setUploadedFile(null);
+                    setUploadProgress(0);
+                    setIsUploading(false);
                   }}
                   className="text-gray-400 hover:text-gray-700 text-2xl transition w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100"
                 >
@@ -597,13 +677,41 @@ export default function ServicesPage() {
                   {selectedService.hasFileUpload !== false && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Завантажте файл (модель, ескіз, фото, креслення) <span className="text-xs text-gray-400">(необов'язково)</span>
+                        Завантажте файл <span className="text-xs text-gray-400">(необов'язково)</span>
                       </label>
-                      <FileUpload onFileSelect={setUploadedFile} />
+                      {(() => {
+                        const config = serviceFileConfig[selectedService.id] || { allowedExtensions: [], maxSize: 50 * 1024 * 1024 };
+                        const accept = config.allowedExtensions.map(ext => `.${ext}`).join(',');
+                        return (
+                          <FileUpload
+                            onFileSelect={setUploadedFile}
+                            accept={accept}
+                            maxSize={config.maxSize}
+                            allowedExtensions={config.allowedExtensions}
+                            label="Перетягніть файл або клікніть для вибору"
+                          />
+                        );
+                      })()}
                       {uploadedFile && (
                         <p className="text-[#1a3c34] text-sm mt-2">✅ Вибрано: {uploadedFile.name}</p>
                       )}
-                      <p className="text-xs text-gray-400 mt-1">Дозволені формати: STL, OBJ, 3MF, PNG, JPG, JPEG, WEBP, GIF, ZIP, RAR, 7Z, PDF (макс. 100MB)</p>
+                      {isUploading && (
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-[#c9a84c] h-2.5 rounded-full transition-all duration-300"
+                              style={{ width: `${uploadProgress}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">Завантаження: {uploadProgress}%</p>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        {(() => {
+                          const config = serviceFileConfig[selectedService.id] || { allowedExtensions: [], maxSize: 50 * 1024 * 1024 };
+                          return `Дозволені формати: ${config.allowedExtensions.join(', ') || 'всі'}. Макс. розмір: ${Math.round(config.maxSize / (1024 * 1024))} МБ`;
+                        })()}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -617,9 +725,12 @@ export default function ServicesPage() {
                   </div>
                   <button
                     onClick={() => addToCartWithOptions(selectedService)}
-                    className="px-8 py-2.5 rounded-xl bg-[#1a3c34] text-white font-bold hover:bg-[#2d5a4b] transition-all duration-300 shadow-md shadow-[#1a3c34]/20 text-base"
+                    disabled={isUploading}
+                    className={`px-8 py-2.5 rounded-xl bg-[#1a3c34] text-white font-bold hover:bg-[#2d5a4b] transition-all duration-300 shadow-md shadow-[#1a3c34]/20 text-base ${
+                      isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   >
-                    {selectedService.priceValue > 0 ? 'Додати в кошик' : 'Замовити'}
+                    {isUploading ? 'Завантаження...' : selectedService.priceValue > 0 ? 'Додати в кошик' : 'Замовити'}
                   </button>
                 </div>
               </div>
