@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import Image from 'next/image';
 import Button from '@/components/ui/Button';
-import AddToCartButton from '@/components/ui/AddToCartButton';
+import GalleryAddToCart from '@/components/ui/GalleryAddToCart';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -17,7 +17,6 @@ async function getGallery() {
 
 export default async function GalleryPage() {
   const images = await getGallery();
-  const categories = ['Всі', ...new Set(images.map((img: any) => img.category))];
 
   return (
     <div className="pt-32 pb-20 container-custom">
@@ -71,7 +70,7 @@ export default async function GalleryPage() {
                 </div>
 
                 <div className="absolute bottom-20 right-3 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                  <AddToCartButton
+                  <GalleryAddToCart
                     item={{
                       id: `gallery-${idx}`,
                       title: img.title,

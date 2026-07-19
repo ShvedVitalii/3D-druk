@@ -161,6 +161,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (res.ok) {
       setStatus('');
       setShowSuccess(true);
+      setLastOrder({ ...form }); // <-- Додайте цей рядок
       setForm({ name: '', phone: '', email: '', delivery: 'nova', city: '', warehouse: '', description: '' });
       setFile(null);
       setModelInfo(null);
@@ -369,7 +370,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Файл моделі або фото *</label>
-            <FileUpload onFileSelect={handleFileSelect} />
+            <FileUpload key={file ? 'has-file' : 'no-file'} onFileSelect={handleFileSelect} />
             {file && <p className="text-[#1a3c34] text-sm mt-2">✅ Вибрано: {file.name}</p>}
           </div>
 

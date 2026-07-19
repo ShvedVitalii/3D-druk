@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
 
 type Order = {
   id: string;
@@ -18,6 +19,7 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -135,6 +137,12 @@ export default function AdminOrders() {
                     {new Date(order.created_at).toLocaleString()}
                   </td>
                   <td className="p-4 text-right space-x-2">
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition"
+                    >
+                      Деталі
+                    </button>
                     <select
                       value={order.status}
                       onChange={(e) => updateStatus(order.id, e.target.value as Order['status'])}
@@ -163,6 +171,10 @@ export default function AdminOrders() {
           </table>
         </div>
       </div>
+
+      {selectedOrder && (
+        <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      )}
     </div>
   );
 }
