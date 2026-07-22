@@ -13,12 +13,13 @@ const blockNames: Record<string, string> = {
   testimonials: 'Відгуки',
   faq: 'Часті запитання',
   finalCTA: 'Готові втілити ідею?',
+  gallery: 'Наші роботи',
 };
 
-// Мапа кастомних редакторів (для блоків зі складною структурою)
+// Мапа кастомних редакторів для блоків зі складною структурою
 const customEditors: Record<string, string> = {
   pricing: '/admin/content/pricing',
-  // можна додати інші, наприклад: services: '/admin/services', gallery: '/admin/gallery' тощо
+  gallery: '/admin/content/gallery',
 };
 
 export default function AdminPage() {
@@ -48,7 +49,8 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/content');
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
-      const excludeKeys = ['services', 'printers', 'gallery', 'contacts'];
+      // Виключаємо зайві ключі, які не потрібно показувати на головній адмінці
+      const excludeKeys = ['services', 'printers', 'contacts', 'catalog', 'payment_details'];
       const filtered = data.filter((item: any) => !excludeKeys.includes(item.key));
       setBlocks(filtered);
     } catch (err) {

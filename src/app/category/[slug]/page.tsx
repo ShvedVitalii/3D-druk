@@ -108,21 +108,30 @@ export default async function CategoryPage({
                   <p className="text-sm text-gray-500 line-clamp-2 mt-1">
                     {product.description}
                   </p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <div>
-                      <span className="text-2xl font-bold text-[#1a3c34]">
-                        {finalPrice} ₴
-                      </span>
-                      {product.oldPrice && product.oldPrice > product.price && (
-                        <span className="text-sm text-red-500 line-through ml-2">
-                          {product.oldPrice} ₴
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[#c9a84c] opacity-0 group-hover:opacity-100 transition">
-                      →
-                    </span>
-                  </div>
+// У картці товару, де виводиться ціна:
+<div className="mt-3 flex items-center justify-between">
+  <div>
+    {product.discount && product.discount > 0 ? (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-2xl font-bold text-[#1a3c34]">
+          {Math.round(product.price * (1 - product.discount / 100))} ₴
+        </span>
+        <span className="text-sm text-red-500 line-through">
+          {product.price} ₴
+        </span>
+        <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
+          -{product.discount}%
+        </span>
+      </div>
+    ) : (
+      <span className="text-2xl font-bold text-[#1a3c34]">{product.price} ₴</span>
+    )}
+    {product.oldPrice && product.oldPrice > product.price && !product.discount && (
+      <span className="text-sm text-red-500 line-through ml-2">{product.oldPrice} ₴</span>
+    )}
+  </div>
+  <span className="text-[#c9a84c] opacity-0 group-hover:opacity-100 transition">→</span>
+</div>
                 </div>
               </Link>
             );

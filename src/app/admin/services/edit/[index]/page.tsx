@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { calculateDiscount, calculateOldPrice, calculateNewPrice } from '@/lib/priceUtils';
 
 type Service = {
   id: number;
@@ -12,6 +13,8 @@ type Service = {
   categoryColor: string;
   price: string;
   priceValue: number;
+  oldPriceValue: number;
+  discount: number;
   unit: string;
   hasCalculator: boolean;
   hasFileUpload: boolean;
@@ -25,10 +28,11 @@ export default function EditService() {
   const params = useParams();
   const index = parseInt(params.index as string);
   const router = useRouter();
-  const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [service, setService] = useState<Service | null>(null);
 
   useEffect(() => {
     fetchService();
@@ -42,12 +46,19 @@ export default function EditService() {
       const serviceItem = items.find((item: any) => item.key === 'services');
       const services = serviceItem?.data || [];
       if (index >= 0 && index < services.length) {
-        setService(services[index]);
+        const s = services[index];
+        // Переконуємося, що поля oldPriceValue та discount існують
+        setService({
+          ...s,
+          oldPriceValue: s.oldPriceValue || 0,
+          discount: s.discount || 0,
+        });
       } else {
         setError('Послугу не знайдено');
       }
     } catch (err) {
       setError('Не вдалося завантажити послугу');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -57,11 +68,33 @@ export default function EditService() {
     setService(prev => prev ? { ...prev, [field]: value } : null);
   };
 
+  const handlePriceChange = (field: 'priceValue' | 'oldPriceValue' | 'discount', value: number) => {
+    if (!service) return;
+    setService(prev => {
+      if (!prev) return null;
+      const newState = { ...prev, [field]: value };
+      // Якщо змінюється ціна або стара ціна – перераховуємо знижку
+      if (field === 'priceValue' && newState.oldPriceValue > 0 && newState.oldPriceValue > newState.priceValue) {
+        newState.discount = calculateDiscount(newState.oldPriceValue, newState.priceValue);
+      }
+      // Якщо змінюється стара ціна – перераховуємо знижку
+      if (field === 'oldPriceValue' && newState.oldPriceValue > 0 && newState.oldPriceValue > newState.priceValue) {
+        newState.discount = calculateDiscount(newState.oldPriceValue, newState.priceValue);
+      }
+      // Якщо змінюється знижка – перераховуємо стару ціну (якщо ціна > 0)
+      if (field === 'discount' && newState.discount > 0 && newState.discount < 100 && newState.priceValue > 0) {
+        newState.oldPriceValue = calculateOldPrice(newState.priceValue, newState.discount);
+      }
+      return newState;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!service) return;
     setSaving(true);
     setError(null);
+    setSuccess(false);
     try {
       const res = await fetch('/api/admin/content');
       const items = await res.json();
@@ -75,9 +108,12 @@ export default function EditService() {
         body: JSON.stringify({ key: 'services', data: services }),
       });
       if (!updateRes.ok) throw new Error('Failed to save');
-      router.push('/admin/services');
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      router.refresh();
     } catch (err) {
       setError('Помилка збереження');
+      console.error(err);
     } finally {
       setSaving(false);
     }
@@ -146,24 +182,54 @@ export default function EditService() {
             className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
           />
         </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Ціна (число)</label>
+            <input
+              type="number"
+              value={service.priceValue}
+              onChange={(e) => handlePriceChange('priceValue', parseFloat(e.target.value) || 0)}
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              min="0"
+              step="0.01"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Стара ціна</label>
+            <input
+              type="number"
+              value={service.oldPriceValue || 0}
+              onChange={(e) => handlePriceChange('oldPriceValue', parseFloat(e.target.value) || 0)}
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              min="0"
+              step="0.01"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Знижка (%)</label>
+            <input
+              type="number"
+              value={service.discount || 0}
+              onChange={(e) => handlePriceChange('discount', parseFloat(e.target.value) || 0)}
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              min="0"
+              max="100"
+              step="0.5"
+            />
+          </div>
+        </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Ціна (текст)</label>
+          <label className="block text-sm font-medium text-gray-700">Одиниця виміру (напр. ₴, грн/г)</label>
           <input
             type="text"
-            value={service.price}
-            onChange={(e) => handleChange('price', e.target.value)}
+            value={service.unit}
+            onChange={(e) => handleChange('unit', e.target.value)}
             className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Ціна (число)</label>
-          <input
-            type="number"
-            value={service.priceValue}
-            onChange={(e) => handleChange('priceValue', parseFloat(e.target.value))}
-            className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
-          />
-        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700">Детальний опис</label>
           <textarea
@@ -173,6 +239,7 @@ export default function EditService() {
             className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
           />
         </div>
+
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <input
@@ -193,7 +260,10 @@ export default function EditService() {
             Має завантаження файлів
           </label>
         </div>
+
         {error && <p className="text-red-500 text-sm">{error}</p>}
+        {success && <p className="text-green-600 text-sm">✅ Зміни збережено!</p>}
+
         <div className="flex justify-end gap-3 pt-4 border-t">
           <button
             type="button"
@@ -207,7 +277,7 @@ export default function EditService() {
             disabled={saving}
             className="px-6 py-2 bg-[#1a3c34] text-white rounded-lg hover:bg-[#2d5a4b] transition disabled:opacity-50"
           >
-            {saving ? 'Збереження...' : 'Зберегти'}
+            {saving ? 'Збереження...' : 'Зберегти зміни'}
           </button>
         </div>
       </form>

@@ -1,16 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-
-// ==================== ОНОВЛЕНІ ЦІНИ МАТЕРІАЛІВ ====================
-const materials = [
-  { name: 'PLA', pricePerGram: 6 },
-  { name: 'PETG', pricePerGram: 7 },
-  { name: 'ABS', pricePerGram: 7 },
-  { name: 'ASA', pricePerGram: 8 },
-  { name: 'TPU', pricePerGram: 10 },
-  { name: 'PA (нейлон)', pricePerGram: 15 },
-];
+import { usePricingData } from '@/hooks/usePricingData';
 
 interface CalculatorModalProps {
   isOpen: boolean;
@@ -18,11 +9,15 @@ interface CalculatorModalProps {
 }
 
 export default function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
-  const [material, setMaterial] = useState(materials[0]);
+  const { getMaterialsList } = usePricingData();
+  const materials = getMaterialsList();
+
+  const [materialIndex, setMaterialIndex] = useState(0);
   const [weight, setWeight] = useState(10);
   const [quantity, setQuantity] = useState(1);
 
-  const total = material.pricePerGram * weight * quantity;
+  const currentMaterial = materials[materialIndex] || { name: 'PLA', pricePerGram: 6 };
+  const total = currentMaterial.pricePerGram * weight * quantity;
 
   if (!isOpen) return null;
 
@@ -48,12 +43,12 @@ export default function CalculatorModal({ isOpen, onClose }: CalculatorModalProp
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Матеріал (ціна за грам)</label>
             <select
-              value={material.name}
-              onChange={(e) => setMaterial(materials.find(m => m.name === e.target.value) || materials[0])}
+              value={materialIndex}
+              onChange={(e) => setMaterialIndex(Number(e.target.value))}
               className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#c9a84c] outline-none transition"
             >
-              {materials.map(m => (
-                <option key={m.name} value={m.name}>
+              {materials.map((m, idx) => (
+                <option key={m.name} value={idx}>
                   {m.name} ({m.pricePerGram} ₴/г)
                 </option>
               ))}
@@ -85,11 +80,6 @@ export default function CalculatorModal({ isOpen, onClose }: CalculatorModalProp
               className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#c9a84c] outline-none transition"
             />
           </div>
-
-          {/* Кнопка (не обов'язкова, можна прибрати, бо ціна оновлюється автоматично) */}
-          <button className="btn-primary w-full py-3" onClick={() => {}}>
-            Розрахувати
-          </button>
 
           {/* Результат */}
           {total > 0 && (

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import FileUpload from '@/components/forms/FileUpload';
+import { calculateDiscount, calculateOldPrice } from '@/lib/priceUtils';
 
 type Spec = { label: string; value: string };
 
@@ -42,6 +43,22 @@ export default function NewProduct() {
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePriceChange = (field: 'price' | 'oldPrice' | 'discount', value: number) => {
+    setForm(prev => {
+      const newState = { ...prev, [field]: value };
+      if (field === 'price' && newState.oldPrice > 0 && newState.oldPrice > newState.price) {
+        newState.discount = calculateDiscount(newState.oldPrice, newState.price);
+      }
+      if (field === 'oldPrice' && newState.oldPrice > 0 && newState.oldPrice > newState.price) {
+        newState.discount = calculateDiscount(newState.oldPrice, newState.price);
+      }
+      if (field === 'discount' && newState.discount > 0 && newState.discount < 100 && newState.price > 0) {
+        newState.oldPrice = calculateOldPrice(newState.price, newState.discount);
+      }
+      return newState;
+    });
   };
 
   const handleImageUpload = async (file: File | null, index: number) => {
@@ -154,7 +171,7 @@ export default function NewProduct() {
               <input
                 type="number"
                 value={form.price}
-                onChange={(e) => handleChange('price', parseFloat(e.target.value))}
+                onChange={(e) => handlePriceChange('price', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 min="0" step="1" required
               />
@@ -164,7 +181,7 @@ export default function NewProduct() {
               <input
                 type="number"
                 value={form.oldPrice}
-                onChange={(e) => handleChange('oldPrice', parseFloat(e.target.value))}
+                onChange={(e) => handlePriceChange('oldPrice', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 min="0" step="1"
               />
@@ -174,7 +191,7 @@ export default function NewProduct() {
               <input
                 type="number"
                 value={form.discount}
-                onChange={(e) => handleChange('discount', parseFloat(e.target.value))}
+                onChange={(e) => handlePriceChange('discount', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 min="0" max="100"
               />

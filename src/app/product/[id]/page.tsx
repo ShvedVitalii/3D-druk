@@ -112,16 +112,27 @@ export default async function ProductPage({
             </Link>
           )}
 
-          <div className="mt-4 flex items-center gap-3">
-            <span className="text-3xl font-bold text-[#1a3c34]">
-              {finalPrice} ₴
-            </span>
-            {product.oldPrice && product.oldPrice > product.price && (
-              <span className="text-lg text-red-500 line-through">
-                {product.oldPrice} ₴
-              </span>
-            )}
-          </div>
+// У блоці ціни:
+<div className="mt-4 flex items-center gap-3">
+  {product.discount && product.discount > 0 ? (
+    <>
+      <span className="text-3xl font-bold text-[#1a3c34]">
+        {Math.round(product.price * (1 - product.discount / 100))} ₴
+      </span>
+      <span className="text-lg text-red-500 line-through">{product.price} ₴</span>
+      <span className="text-sm bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
+        -{product.discount}%
+      </span>
+    </>
+  ) : (
+    <>
+      <span className="text-3xl font-bold text-[#1a3c34]">{product.price} ₴</span>
+      {product.oldPrice && product.oldPrice > product.price && (
+        <span className="text-lg text-red-500 line-through">{product.oldPrice} ₴</span>
+      )}
+    </>
+  )}
+</div>
 
           <div className="mt-4">
             <p className="text-gray-600 leading-relaxed">{product.description}</p>

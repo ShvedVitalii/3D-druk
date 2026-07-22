@@ -6,22 +6,17 @@ import FileUpload from '@/components/forms/FileUpload';
 import CalculatorModal from '@/components/order/CalculatorModal';
 import DeliverySelector from '@/components/order/DeliverySelector';
 import STLViewer from '@/components/order/STLViewer';
+import { usePricingData } from '@/hooks/usePricingData';
 
-// ==================== ЦІНИ МАТЕРІАЛІВ ====================
-const materialPrices: Record<string, number> = {
-  PLA: 6,
-  PETG: 7,
-  ABS: 7,
-  ASA: 8,
-  TPU: 10,
-  'PA (нейлон)': 15,
-};
-
+// ==================== ДОЗВОЛЕНІ ФОРМАТИ ФАЙЛІВ ====================
 const ALLOWED_FILE_TYPES = ['stl', 'obj', '3mf', 'step', 'iges', 'stp'];
 const ALLOWED_FILE_EXTENSIONS = ALLOWED_FILE_TYPES.map(ext => `.${ext}`).join(',');
 
 export default function OrderPage() {
   const router = useRouter();
+  const { getMaterialPrice, getMaterialsList } = usePricingData();
+  const materials = getMaterialsList();
+
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -37,14 +32,14 @@ export default function OrderPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showIndividualModal, setShowIndividualModal] = useState(false);
 
-  // ===== ОПЛАТА (МАСИВ) =====
+  // ===== ОПЛАТА =====
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [paymentNumber, setPaymentNumber] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState<any[]>([]);
 
   // ===== ПАРАМЕТРИ ДРУКУ =====
-  const [material, setMaterial] = useState('PLA');
+  const [material, setMaterial] = useState(materials[0]?.name || 'PLA');
   const [weight, setWeight] = useState(50);
   const [quantity, setQuantity] = useState(1);
   const [infill, setInfill] = useState(20);
@@ -64,9 +59,9 @@ export default function OrderPage() {
     quantity?: string;
   }>({});
 
-  // ===== РОЗРАХУНОК ЦІНИ =====
+  // ===== РОЗРАХУНОК ЦІНИ (використовує getMaterialPrice) =====
   const calculatePrice = () => {
-    const basePricePerGram = materialPrices[material] || 6;
+    const basePricePerGram = getMaterialPrice(material);
     const baseTotal = basePricePerGram * weight * quantity;
     const infillFactor = 1 + (infill / 100) * 0.01;
     const perimeterFactor = 1 + (perimeters - 1) * 0.02;
@@ -92,7 +87,7 @@ export default function OrderPage() {
 
   const priceData = calculatePrice();
 
-  // ===== ЗАВАНТАЖЕННЯ РЕКВІЗИТІВ (МАСИВ) =====
+  // ===== ЗАВАНТАЖЕННЯ РЕКВІЗИТІВ =====
   const fetchPaymentDetails = async () => {
     try {
       const res = await fetch('/api/admin/content');
@@ -133,6 +128,10 @@ export default function OrderPage() {
 
   useEffect(() => {
     fetchPaymentDetails();
+    // Встановлюємо перший матеріал за замовчуванням
+    if (materials.length > 0) {
+      setMaterial(materials[0].name);
+    }
   }, []);
 
   // ===== ВАЛІДАЦІЯ =====
@@ -307,6 +306,11 @@ export default function OrderPage() {
     if (file) setErrors(prev => ({ ...prev, file: undefined }));
   }, [file]);
 
+  // Оновлюємо розрахунок при зміні параметрів
+  useEffect(() => {
+    calculatePrice();
+  }, [material, weight, quantity, infill, perimeters, layerHeight]);
+
   return (
     <div className="pt-32 pb-20 container-custom max-w-4xl mx-auto">
       <div className="text-center mb-10">
@@ -407,11 +411,14 @@ export default function OrderPage() {
                   onChange={(e) => setMaterial(e.target.value)}
                   className="w-full p-2 bg-white rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 >
-                  {Object.keys(materialPrices).map((m) => (
-                    <option key={m} value={m}>{m} ({materialPrices[m]} ₴/г)</option>
+                  {materials.map((m) => (
+                    <option key={m.name} value={m.name}>
+                      {m.name} ({m.pricePerGram} ₴/г)
+                    </option>
                   ))}
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Вага моделі (г) *</label>
                 <input
@@ -431,6 +438,7 @@ export default function OrderPage() {
                   </p>
                 )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Кількість</label>
                 <input
@@ -445,6 +453,7 @@ export default function OrderPage() {
                 />
                 {errors.quantity && <p className="text-red-500 text-sm mt-1">{errors.quantity}</p>}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Заповнення (%)</label>
                 <input
@@ -461,6 +470,7 @@ export default function OrderPage() {
                   <span>рекомендовано: 20%</span>
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Периметри</label>
                 <input
@@ -477,6 +487,7 @@ export default function OrderPage() {
                   <span>рекомендовано: 2</span>
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Висота шару (мм)</label>
                 <select
@@ -596,7 +607,7 @@ export default function OrderPage() {
             </div>
           )}
 
-          {/* ===== ОПЛАТА (МАСИВ) ===== */}
+          {/* ОПЛАТА */}
           <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-2 border-amber-300 rounded-xl p-6 space-y-4 shadow-md">
             <div className="flex items-start gap-3">
               <span className="text-3xl">💳</span>
@@ -608,7 +619,6 @@ export default function OrderPage() {
               </div>
             </div>
 
-            {/* СТИЛЬНА КНОПКА РЕКВІЗИТІВ */}
             <button
               type="button"
               onClick={() => setShowPaymentModal(true)}
@@ -706,70 +716,66 @@ export default function OrderPage() {
         </div>
       )}
 
-{/* МОДАЛКА РЕКВІЗИТИ – 2 КОЛОНКИ */}
-{showPaymentModal && paymentDetails.length > 0 && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-    onClick={() => setShowPaymentModal(false)}
-  >
-    <div
-      className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex justify-between items-center mb-5">
-        <h3 className="text-2xl font-bold text-[#1a3c34] flex items-center gap-2">
-          <span className="text-2xl">💳</span> Реквізити для оплати
-        </h3>
-        <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-700 text-2xl transition">
-          ✕
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200 max-h-96 overflow-y-auto">
-        {paymentDetails.map((detail, idx) => (
-          <div key={idx} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-bold text-[#c9a84c]">#{idx + 1}</span>
-              <span className="text-sm font-semibold text-gray-700">{detail.bankName}</span>
+      {/* МОДАЛКА РЕКВІЗИТИ */}
+      {showPaymentModal && paymentDetails.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowPaymentModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-[#1a3c34] flex items-center gap-2">
+                <span className="text-2xl">💳</span> Реквізити для оплати
+              </h3>
+              <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-700 text-2xl transition">
+                ✕
+              </button>
             </div>
-            <div className="space-y-2 text-sm">
-              <div>
-                <p className="text-xs font-medium text-gray-500">Отримувач</p>
-                <p className="text-sm font-semibold text-gray-900 break-words">{detail.recipientName}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500">IBAN</p>
-                <p className="text-sm font-mono font-bold text-[#1a3c34] break-all">{detail.iban}</p>
-              </div>
-              {detail.edrpou && (
-                <div>
-                  <p className="text-xs font-medium text-gray-500">ЄДРПОУ / РНОКПП</p>
-                  <p className="text-sm font-semibold text-gray-900">{detail.edrpou}</p>
+            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200 max-h-96 overflow-y-auto">
+              {paymentDetails.map((detail, idx) => (
+                <div key={idx} className="border-b border-gray-200 last:border-0 pb-3 last:pb-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg font-bold text-[#c9a84c]">#{idx + 1}</span>
+                    <span className="text-sm font-medium text-gray-600">{detail.bankName}</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Отримувач</p>
+                    <p className="font-medium text-gray-800">{detail.recipientName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">IBAN</p>
+                    <p className="font-mono font-bold text-sm text-[#1a3c34] break-all">{detail.iban}</p>
+                  </div>
+                  {detail.edrpou && (
+                    <div>
+                      <p className="text-xs text-gray-500">ЄДРПОУ / РНОКПП</p>
+                      <p className="font-medium text-gray-800">{detail.edrpou}</p>
+                    </div>
+                  )}
+                  {detail.paymentPurpose && (
+                    <div>
+                      <p className="text-xs text-gray-500">Призначення платежу</p>
+                      <p className="font-medium text-gray-800">{detail.paymentPurpose}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-              {detail.paymentPurpose && (
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Призначення</p>
-                  <p className="text-sm font-semibold text-gray-900">{detail.paymentPurpose}</p>
-                </div>
-              )}
+              ))}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                ⚠️ Після оплати вкажіть номер платежу в полі вище та підтвердіть оплату.
+              </div>
             </div>
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="mt-4 w-full py-2 bg-[#1a3c34] text-white rounded-lg font-medium hover:bg-[#2d5a4b] transition"
+            >
+              Закрити
+            </button>
           </div>
-        ))}
-        <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-          ⚠️ Після оплати вкажіть номер платежу в полі вище та підтвердіть оплату.
         </div>
-      </div>
-
-      <button
-        onClick={() => setShowPaymentModal(false)}
-        className="mt-5 w-full py-3 bg-[#1a3c34] text-white rounded-xl font-bold text-base hover:bg-[#2d5a4b] transition"
-      >
-        Закрити
-      </button>
-    </div>
-  </div>
-)}
+      )}
 
       <CalculatorModal isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
     </div>
