@@ -24,6 +24,7 @@ type Category = {
   id: string;
   name: string;
   slug: string;
+  description: string;
 };
 
 export default function AdminCategoryProducts() {
