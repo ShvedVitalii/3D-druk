@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import FileUpload from '@/components/forms/FileUpload';
+import { calculateDiscount, calculateOldPrice } from '@/lib/priceUtils';
 
 type Spec = { label: string; value: string };
 type Product = {
@@ -17,6 +18,7 @@ type Product = {
   specs: Spec[];
   inStock: boolean;
   hidden: boolean;
+  maxQuantity?: number;
 };
 
 export default function EditProduct() {
@@ -51,6 +53,24 @@ export default function EditProduct() {
 
   const handleChange = (field: string, value: any) => {
     setProduct((prev) => prev ? { ...prev, [field]: value } : null);
+  };
+
+  const handlePriceChange = (field: 'price' | 'oldPrice' | 'discount', value: number) => {
+    if (!product) return;
+    setProduct(prev => {
+      if (!prev) return null;
+      const newState = { ...prev, [field]: value };
+      if (field === 'price' && newState.oldPrice > 0 && newState.oldPrice > newState.price) {
+        newState.discount = calculateDiscount(newState.oldPrice, newState.price);
+      }
+      if (field === 'oldPrice' && newState.oldPrice > 0 && newState.oldPrice > newState.price) {
+        newState.discount = calculateDiscount(newState.oldPrice, newState.price);
+      }
+      if (field === 'discount' && newState.discount > 0 && newState.discount < 100 && newState.price > 0) {
+        newState.oldPrice = calculateOldPrice(newState.price, newState.discount);
+      }
+      return newState;
+    });
   };
 
   const handleImageUpload = async (file: File | null, index: number) => {
@@ -161,7 +181,7 @@ export default function EditProduct() {
               <input
                 type="number"
                 value={product.price}
-                onChange={(e) => handleChange('price', parseFloat(e.target.value))}
+                onChange={(e) => handlePriceChange('price', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 min="0" step="1" required
               />
@@ -171,7 +191,7 @@ export default function EditProduct() {
               <input
                 type="number"
                 value={product.oldPrice}
-                onChange={(e) => handleChange('oldPrice', parseFloat(e.target.value))}
+                onChange={(e) => handlePriceChange('oldPrice', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 min="0" step="1"
               />
@@ -181,7 +201,7 @@ export default function EditProduct() {
               <input
                 type="number"
                 value={product.discount}
-                onChange={(e) => handleChange('discount', parseFloat(e.target.value))}
+                onChange={(e) => handlePriceChange('discount', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 min="0" max="100"
               />
@@ -196,6 +216,78 @@ export default function EditProduct() {
               rows={4}
               className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
             />
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Матеріал</label>
+              <input
+                type="text"
+                value={product.specs.find((s) => s.label === 'Матеріал')?.value || ''}
+                onChange={(e) => {
+                  const newSpecs = [...product.specs];
+                  const idx = newSpecs.findIndex((s) => s.label === 'Матеріал');
+                  if (idx >= 0) {
+                    newSpecs[idx] = { ...newSpecs[idx], value: e.target.value };
+                  } else {
+                    newSpecs.push({ label: 'Матеріал', value: e.target.value });
+                  }
+                  setProduct({ ...product, specs: newSpecs });
+                }}
+                className="w-full p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+                placeholder="PLA, ABS, PETG..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Розміри (Ш×Д×В)</label>
+              <input
+                type="text"
+                value={product.specs.find((s) => s.label === 'Розміри')?.value || ''}
+                onChange={(e) => {
+                  const newSpecs = [...product.specs];
+                  const idx = newSpecs.findIndex((s) => s.label === 'Розміри');
+                  if (idx >= 0) {
+                    newSpecs[idx] = { ...newSpecs[idx], value: e.target.value };
+                  } else {
+                    newSpecs.push({ label: 'Розміри', value: e.target.value });
+                  }
+                  setProduct({ ...product, specs: newSpecs });
+                }}
+                className="w-full p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+                placeholder="15×10×5 см"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Вага</label>
+              <input
+                type="text"
+                value={product.specs.find((s) => s.label === 'Вага')?.value || ''}
+                onChange={(e) => {
+                  const newSpecs = [...product.specs];
+                  const idx = newSpecs.findIndex((s) => s.label === 'Вага');
+                  if (idx >= 0) {
+                    newSpecs[idx] = { ...newSpecs[idx], value: e.target.value };
+                  } else {
+                    newSpecs.push({ label: 'Вага', value: e.target.value });
+                  }
+                  setProduct({ ...product, specs: newSpecs });
+                }}
+                className="w-full p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+                placeholder="120 г"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Максимальна кількість для замовлення</label>
+            <input
+              type="number"
+              value={product.maxQuantity ?? ''}
+              onChange={(e) => handleChange('maxQuantity', e.target.value === '' ? undefined : parseInt(e.target.value))}
+              min="0"
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+            />
+            <p className="text-xs text-gray-400 mt-1">0 або порожньо = без обмежень</p>
           </div>
 
           <div>
@@ -232,31 +324,34 @@ export default function EditProduct() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Характеристики</label>
-            {product.specs.map((spec, index) => (
-              <div key={index} className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={spec.label}
-                  onChange={(e) => handleSpecChange(index, 'label', e.target.value)}
-                  placeholder="Назва"
-                  className="flex-1 p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
-                />
-                <input
-                  type="text"
-                  value={spec.value}
-                  onChange={(e) => handleSpecChange(index, 'value', e.target.value)}
-                  placeholder="Значення"
-                  className="flex-1 p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeSpec(index)}
-                  className="px-3 py-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition text-sm"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+            {product.specs.map((spec, index) => {
+              if (['Матеріал', 'Розміри', 'Вага'].includes(spec.label)) return null;
+              return (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={spec.label}
+                    onChange={(e) => handleSpecChange(index, 'label', e.target.value)}
+                    placeholder="Назва"
+                    className="flex-1 p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={spec.value}
+                    onChange={(e) => handleSpecChange(index, 'value', e.target.value)}
+                    placeholder="Значення"
+                    className="flex-1 p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeSpec(index)}
+                    className="px-3 py-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
             <button
               type="button"
               onClick={addSpec}
@@ -264,6 +359,7 @@ export default function EditProduct() {
             >
               + Додати характеристику
             </button>
+            <p className="text-xs text-gray-400 mt-1">Матеріал, Розміри та Вага редагуються окремо вище.</p>
           </div>
 
           <div className="flex gap-6">

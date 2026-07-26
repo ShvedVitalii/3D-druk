@@ -16,8 +16,10 @@ async function getPrinters() {
 
 export default async function PrinterPage() {
   const printers = await getPrinters();
-  const flagship = printers.find((p: any) => p.featured);
-  const others = printers.filter((p: any) => !p.featured && !p.hidden);
+  // Фільтруємо приховані
+  const visiblePrinters = printers.filter((p: any) => !p.hidden);
+  const flagship = visiblePrinters.find((p: any) => p.featured);
+  const others = visiblePrinters.filter((p: any) => !p.featured);
 
   return (
     <div className="pt-32 pb-20 container-custom max-w-6xl mx-auto overflow-hidden">

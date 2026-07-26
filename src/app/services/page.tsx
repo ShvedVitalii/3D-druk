@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/store/cartStore';
 import FileUpload from '@/components/forms/FileUpload';
+import Pagination from '@/components/ui/Pagination';
 
 const serviceFileConfig: Record<number, { allowedExtensions: string[]; maxSize: number }> = {
   1: { allowedExtensions: ['stl', 'obj', '3mf', 'step', 'iges', 'stp'], maxSize: 50 * 1024 * 1024 },
@@ -20,6 +21,8 @@ const serviceFileConfig: Record<number, { allowedExtensions: string[]; maxSize: 
   12: { allowedExtensions: ['pdf', 'jpg', 'png', 'stl'], maxSize: 50 * 1024 * 1024 },
 };
 
+const ITEMS_PER_PAGE = 9;
+
 export default function ServicesPage() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +36,7 @@ export default function ServicesPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
 
   const [categories, setCategories] = useState<string[]>(['Всі']);
@@ -78,9 +82,21 @@ export default function ServicesPage() {
     }
   }, [calculatorValues, selectedService]);
 
+  // Фільтрація та пагінація
   const filtered = selectedCategory === 'Всі'
-    ? services
-    : services.filter((s: any) => s.category === selectedCategory);
+    ? services.filter((s: any) => !s.hidden)
+    : services.filter((s: any) => s.category === selectedCategory && !s.hidden);
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedServices = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Скидання сторінки при зміні категорії
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory]);
 
   const handleCalculatorChange = (key: string, value: any) => {
     setCalculatorValues(prev => ({ ...prev, [key]: value }));
@@ -191,6 +207,7 @@ export default function ServicesPage() {
         options,
         originalPrice: service.oldPriceValue || undefined,
         discount: service.discount || 0,
+        isService: true,
       });
       showToastMessage(`✅ ${service.title} додано до кошика!`);
       setAdditionalInfo('');
@@ -244,6 +261,7 @@ export default function ServicesPage() {
         values: values,
         basePrice: basePrice,
       },
+      isService: true,
     });
     showToastMessage(`✅ ${service.title} додано до кошика!`);
     setAdditionalInfo('');
@@ -288,7 +306,6 @@ export default function ServicesPage() {
     return service.price || 'Договірна';
   };
 
-  // Функція для отримання акційної ціни та старої ціни
   const getPriceInfo = (service: any) => {
     if (service.discount && service.discount > 0 && service.oldPriceValue) {
       const finalPrice = Math.round(service.oldPriceValue * (1 - service.discount / 100));
@@ -377,131 +394,135 @@ export default function ServicesPage() {
       )}
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filtered
-          .filter((s: any) => !s.hidden)
-          .map((service: any, idx: number) => {
-            const priceInfo = getPriceInfo(service);
-            return (
-              <motion.div
-                key={service.id || idx}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: idx * 0.04 }}
-                whileHover={{ y: -4, boxShadow: '0 12px 40px rgba(0,0,0,0.06)' }}
-                className="group bg-white rounded-2xl border border-gray-100/80 transition-all duration-300 hover:border-gray-200 hover:shadow-xl flex flex-col overflow-hidden"
-              >
-                <div
-                  className="h-0.5 w-full transition-all duration-300 group-hover:h-1"
-                  style={{ backgroundColor: service.categoryColor || '#c9a84c' }}
-                />
+        {paginatedServices.map((service: any, idx: number) => {
+          const priceInfo = getPriceInfo(service);
+          return (
+            <motion.div
+              key={service.id || idx}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: idx * 0.04 }}
+              whileHover={{ y: -4, boxShadow: '0 12px 40px rgba(0,0,0,0.06)' }}
+              className="group bg-white rounded-2xl border border-gray-100/80 transition-all duration-300 hover:border-gray-200 hover:shadow-xl flex flex-col overflow-hidden"
+            >
+              <div
+                className="h-0.5 w-full transition-all duration-300 group-hover:h-1"
+                style={{ backgroundColor: service.categoryColor || '#c9a84c' }}
+              />
 
-                <div className="p-5 flex-1 flex flex-col">
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-3xl flex-shrink-0 group-hover:bg-[#c9a84c]/5 transition">
-                      {service.emoji || '📦'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span
-                          className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white"
-                          style={{ backgroundColor: service.categoryColor || '#c9a84c' }}
-                        >
-                          {service.category || 'Послуга'}
-                        </span>
-                        {priceInfo.hasDiscount && (
-                          <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
-                            -{priceInfo.discount}%
-                          </span>
-                        )}
-                        {service.hasCalculator && (
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-                            🧮
-                          </span>
-                        )}
-                        {service.hasFileUpload !== false && (
-                          <span className="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
-                            📎
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-base font-bold text-[#1a3c34] mt-1.5 leading-snug group-hover:text-[#c9a84c] transition-colors">
-                        {service.title}
-                      </h3>
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{service.description}</p>
-                    </div>
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-3xl flex-shrink-0 group-hover:bg-[#c9a84c]/5 transition">
+                    {service.emoji || '📦'}
                   </div>
-
-                  <div className="mt-auto pt-4 border-t border-gray-100">
-                    <div className="mb-3">
-                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider block">Ціна</span>
-                      {priceInfo.hasDiscount ? (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xl font-bold text-[#1a3c34] tracking-tight">
-                            {service.id === 1 && minPrice > 0 
-                              ? `від ${minPrice} грн/г` 
-                              : `${priceInfo.finalPrice} ${service.unit || '₴'}`
-                            }
-                          </span>
-                          {priceInfo.oldPrice > 0 && (
-                            <span className="text-sm text-red-500 line-through">
-                              {priceInfo.oldPrice} {service.unit || '₴'}
-                            </span>
-                          )}
-                          <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
-                            -{priceInfo.discount}%
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xl font-bold text-[#1a3c34] tracking-tight">
-                          {displayPrice(service)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white"
+                        style={{ backgroundColor: service.categoryColor || '#c9a84c' }}
+                      >
+                        {service.category || 'Послуга'}
+                      </span>
+                      {priceInfo.hasDiscount && (
+                        <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
+                          -{priceInfo.discount}%
+                        </span>
+                      )}
+                      {service.hasCalculator && (
+                        <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                          🧮
+                        </span>
+                      )}
+                      {service.hasFileUpload !== false && (
+                        <span className="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
+                          📎
                         </span>
                       )}
                     </div>
-
-                    <div className="flex gap-2">
-                      {service.id === 1 ? (
-                        <button
-                          onClick={() => window.location.href = '/order'}
-                          className="w-full px-4 py-2 text-xs font-semibold rounded-lg bg-[#1a3c34] text-white hover:bg-[#2d5a4b] transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1"
-                        >
-                          <span>📋</span> Замовити
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => openServiceModal(service)}
-                            className="flex-1 px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-500 hover:border-[#c9a84c] hover:text-[#c9a84c] hover:bg-[#c9a84c]/5 transition-all duration-200"
-                          >
-                            Детальніше
-                          </button>
-                          {service.priceValue > 0 ? (
-                            <button
-                              onClick={() => openServiceModal(service)}
-                              className="flex-1 px-4 py-2 text-xs font-semibold rounded-lg bg-[#1a3c34] text-white hover:bg-[#2d5a4b] transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1"
-                            >
-                              <span>🛒</span> Купити
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => openServiceModal(service)}
-                              className="flex-1 px-4 py-2 text-xs font-semibold rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-all duration-200"
-                            >
-                              Замовити
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
+                    <h3 className="text-base font-bold text-[#1a3c34] mt-1.5 leading-snug group-hover:text-[#c9a84c] transition-colors">
+                      {service.title}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{service.description}</p>
                   </div>
                 </div>
-              </motion.div>
-            );
-          })}
+
+                <div className="mt-auto pt-4 border-t border-gray-100">
+                  <div className="mb-3">
+                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider block">Ціна</span>
+                    {priceInfo.hasDiscount ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xl font-bold text-[#1a3c34] tracking-tight">
+                          {service.id === 1 && minPrice > 0 
+                            ? `від ${minPrice} грн/г` 
+                            : `${priceInfo.finalPrice} ${service.unit || '₴'}`
+                          }
+                        </span>
+                        {priceInfo.oldPrice > 0 && (
+                          <span className="text-sm text-red-500 line-through">
+                            {priceInfo.oldPrice} {service.unit || '₴'}
+                          </span>
+                        )}
+                        <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
+                          -{priceInfo.discount}%
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xl font-bold text-[#1a3c34] tracking-tight">
+                        {displayPrice(service)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {service.id === 1 ? (
+                      <button
+                        onClick={() => window.location.href = '/order'}
+                        className="w-full px-4 py-2 text-xs font-semibold rounded-lg bg-[#1a3c34] text-white hover:bg-[#2d5a4b] transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1"
+                      >
+                        <span>📋</span> Замовити
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => openServiceModal(service)}
+                          className="flex-1 px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-500 hover:border-[#c9a84c] hover:text-[#c9a84c] hover:bg-[#c9a84c]/5 transition-all duration-200"
+                        >
+                          Детальніше
+                        </button>
+                        {service.priceValue > 0 ? (
+                          <button
+                            onClick={() => openServiceModal(service)}
+                            className="flex-1 px-4 py-2 text-xs font-semibold rounded-lg bg-[#1a3c34] text-white hover:bg-[#2d5a4b] transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1"
+                          >
+                            <span>🛒</span> Купити
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => openServiceModal(service)}
+                            className="flex-1 px-4 py-2 text-xs font-semibold rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-all duration-200"
+                          >
+                            Замовити
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
-      {filtered.length === 0 && (
+      {paginatedServices.length === 0 && (
         <div className="text-center py-12 text-gray-400">Немає послуг у цій категорії</div>
       )}
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       <div className="mt-12 text-center">
         <p className="text-gray-700 text-sm mb-4">Не знайшли потрібну послугу?</p>
@@ -513,7 +534,7 @@ export default function ServicesPage() {
         </button>
       </div>
 
-      {/* Модальне вікно */}
+      {/* Модальне вікно (залишається без змін) */}
       <AnimatePresence>
         {selectedService && (
           <div
@@ -768,7 +789,12 @@ export default function ServicesPage() {
                   <div>
                     <p className="text-xs text-gray-400">Вартість</p>
                     <p className="text-2xl font-bold text-[#1a3c34]">
-                      {calculatedPrice !== null ? `${calculatedPrice} ₴` : selectedService.price || 'Договірна'}
+                      {selectedService.id === 1 && minPrice > 0 && calculatedPrice === null
+                        ? `від ${minPrice} грн/г`
+                        : calculatedPrice !== null
+                          ? `${calculatedPrice} ₴`
+                          : selectedService.price || 'Договірна'
+                      }
                     </p>
                     {selectedService.oldPriceValue && selectedService.oldPriceValue > 0 && (
                       <p className="text-sm text-red-500 line-through">{selectedService.oldPriceValue} ₴</p>

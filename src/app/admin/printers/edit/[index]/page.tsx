@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import FileUpload from '@/components/forms/FileUpload';
 
 type Printer = {
   name: string;
@@ -21,6 +22,7 @@ export default function EditPrinter() {
   const [printer, setPrinter] = useState<Printer | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,6 +50,27 @@ export default function EditPrinter() {
 
   const handleChange = (field: string, value: any) => {
     setPrinter(prev => prev ? { ...prev, [field]: value } : null);
+  };
+
+  const handleImageUpload = async (file: File | null) => {
+    if (!file || !printer) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.fileUrl) {
+        setPrinter({ ...printer, img: data.fileUrl });
+      }
+    } catch (err) {
+      alert('Помилка завантаження фото');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSpecChange = (specIndex: number, field: 'label' | 'value', value: string) => {
@@ -131,15 +154,25 @@ export default function EditPrinter() {
             className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Шлях до зображення</label>
-          <input
-            type="text"
-            value={printer.img}
-            onChange={(e) => handleChange('img', e.target.value)}
-            className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+          <label className="block text-sm font-medium text-gray-700">Фото принтера</label>
+          {printer.img && (
+            <div className="mb-3 relative w-40 h-40 rounded-lg overflow-hidden border border-gray-200">
+              <img src={printer.img} alt="Поточне фото" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <FileUpload
+            onFileSelect={handleImageUpload}
+            accept=".jpg,.jpeg,.png,.webp,.svg"
+            allowedExtensions={['jpg', 'jpeg', 'png', 'webp', 'svg']}
+            maxSize={5 * 1024 * 1024}
+            label={printer.img ? 'Замінити фото' : 'Завантажити фото'}
           />
+          {uploading && <p className="text-sm text-blue-500 mt-1">Завантаження...</p>}
+          {printer.img && <p className="text-sm text-green-600 mt-1">✅ Фото завантажено</p>}
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700">Колір акценту (hex)</label>
           <input
@@ -215,7 +248,7 @@ export default function EditPrinter() {
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || uploading}
             className="px-6 py-2 bg-[#1a3c34] text-white rounded-lg hover:bg-[#2d5a4b] transition disabled:opacity-50"
           >
             {saving ? 'Збереження...' : 'Зберегти'}

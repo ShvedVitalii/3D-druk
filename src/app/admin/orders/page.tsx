@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
+import Pagination from '@/components/ui/Pagination';
 
 type Order = {
   id: string;
@@ -14,12 +15,15 @@ type Order = {
   created_at: string;
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchOrders();
@@ -65,6 +69,15 @@ export default function AdminOrders() {
   };
 
   const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
 
   if (loading) return <div className="text-center py-10">Завантаження...</div>;
   if (error) return <div className="text-red-500 text-center py-10">{error}</div>;
@@ -104,7 +117,7 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredOrders.map(order => (
+              {paginatedOrders.map(order => (
                 <tr key={order.id} className="hover:bg-gray-50 transition">
                   <td className="p-4">
                     <div>
@@ -162,7 +175,7 @@ export default function AdminOrders() {
                   </td>
                 </tr>
               ))}
-              {filteredOrders.length === 0 && (
+              {paginatedOrders.length === 0 && (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-gray-400">Заявок немає</td>
                 </tr>
@@ -171,6 +184,12 @@ export default function AdminOrders() {
           </table>
         </div>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {selectedOrder && (
         <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />

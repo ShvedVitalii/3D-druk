@@ -23,6 +23,10 @@ export default function NewProduct() {
     images: [''] as string[],
     inStock: true,
     hidden: false,
+    material: '',
+    dimensions: '',
+    weight: '',
+    maxQuantity: undefined as number | undefined,
   });
   const [specs, setSpecs] = useState<Spec[]>([{ label: '', value: '' }]);
 
@@ -105,14 +109,38 @@ export default function NewProduct() {
     setSpecs(specs.filter((_, i) => i !== index));
   };
 
+  const buildSpecs = () => {
+    const result: Spec[] = [];
+    if (form.material.trim()) {
+      result.push({ label: 'Матеріал', value: form.material.trim() });
+    }
+    if (form.dimensions.trim()) {
+      result.push({ label: 'Розміри', value: form.dimensions.trim() });
+    }
+    if (form.weight.trim()) {
+      result.push({ label: 'Вага', value: form.weight.trim() });
+    }
+    specs.forEach(s => {
+      if (s.label.trim() && s.value.trim()) {
+        const isMain = ['Матеріал', 'Розміри', 'Вага'].includes(s.label.trim());
+        if (!isMain) {
+          result.push(s);
+        }
+      }
+    });
+    return result;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
       alert('Введіть назву товару');
       return;
     }
-    const validSpecs = specs.filter((s) => s.label.trim() && s.value.trim());
+
     const validImages = form.images.filter((url) => url.trim());
+    const finalSpecs = buildSpecs();
+
     setLoading(true);
     try {
       const res = await fetch('/api/admin/catalog');
@@ -120,9 +148,16 @@ export default function NewProduct() {
       const newProduct = {
         id: `prod_${Date.now()}`,
         categoryId,
-        ...form,
+        title: form.title,
+        price: form.price,
+        oldPrice: form.oldPrice,
+        discount: form.discount,
+        description: form.description,
         images: validImages.length > 0 ? validImages : ['/images/placeholder.jpg'],
-        specs: validSpecs,
+        specs: finalSpecs,
+        inStock: form.inStock,
+        hidden: form.hidden,
+        maxQuantity: form.maxQuantity,
         createdAt: new Date().toISOString(),
       };
       const newProducts = [...(data.products || []), newProduct];
@@ -208,6 +243,51 @@ export default function NewProduct() {
             />
           </div>
 
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Матеріал</label>
+              <input
+                type="text"
+                value={form.material}
+                onChange={(e) => handleChange('material', e.target.value)}
+                className="w-full p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+                placeholder="PLA, ABS, PETG..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Розміри (Ш×Д×В)</label>
+              <input
+                type="text"
+                value={form.dimensions}
+                onChange={(e) => handleChange('dimensions', e.target.value)}
+                className="w-full p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+                placeholder="15×10×5 см"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Вага</label>
+              <input
+                type="text"
+                value={form.weight}
+                onChange={(e) => handleChange('weight', e.target.value)}
+                className="w-full p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+                placeholder="120 г"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Максимальна кількість для замовлення</label>
+            <input
+              type="number"
+              value={form.maxQuantity ?? ''}
+              onChange={(e) => handleChange('maxQuantity', e.target.value === '' ? undefined : parseInt(e.target.value))}
+              min="0"
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+            />
+            <p className="text-xs text-gray-400 mt-1">0 або порожньо = без обмежень</p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Зображення</label>
             {form.images.map((url, index) => (
@@ -241,7 +321,7 @@ export default function NewProduct() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Характеристики</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Додаткові характеристики</label>
             {specs.map((spec, index) => (
               <div key={index} className="flex gap-2 mb-2">
                 <input
@@ -274,6 +354,7 @@ export default function NewProduct() {
             >
               + Додати характеристику
             </button>
+            <p className="text-xs text-gray-400 mt-1">Матеріал, Розміри та Вага будуть автоматично додані до характеристик.</p>
           </div>
 
           <div className="flex gap-6">

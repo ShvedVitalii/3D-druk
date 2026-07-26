@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Pagination from '@/components/ui/Pagination';
 
 type Printer = {
   name: string;
@@ -20,6 +21,10 @@ export default function AdminPrinters() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Пагінація
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchPrinters();
@@ -76,6 +81,11 @@ export default function AdminPrinters() {
   if (loading) return <div className="text-center py-10">Завантаження...</div>;
   if (error) return <div className="text-red-500 text-center py-10">{error}</div>;
 
+  // Пагінація
+  const totalPages = Math.ceil(printers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentPrinters = printers.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -95,55 +105,66 @@ export default function AdminPrinters() {
               <tr>
                 <th className="text-left p-4 font-semibold text-gray-600">Назва</th>
                 <th className="text-left p-4 font-semibold text-gray-600">Тег</th>
+                <th className="text-left p-4 font-semibold text-gray-600">Головний</th>
                 <th className="text-left p-4 font-semibold text-gray-600">Статус</th>
                 <th className="text-right p-4 font-semibold text-gray-600">Дії</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {printers.map((printer, index) => (
-                <tr key={index} className="hover:bg-gray-50 transition">
-                  <td className="p-4 font-medium text-[#1a3c34]">{printer.name}</td>
-                  <td className="p-4">
-                    <span className="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                      {printer.tag}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    {printer.hidden ? (
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Сховано</span>
-                    ) : (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Видимо</span>
-                    )}
-                  </td>
-                  <td className="p-4 text-right space-x-2">
-                    <button
-                      onClick={() => toggleHidden(index)}
-                      className={`px-3 py-1 text-xs rounded-lg transition ${
-                        printer.hidden
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {printer.hidden ? 'Показати' : 'Сховати'}
-                    </button>
-                    <Link
-                      href={`/admin/printers/edit/${index}`}
-                      className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
-                    >
-                      Редагувати
-                    </Link>
-                    <button
-                      onClick={() => deletePrinter(index)}
-                      className="px-3 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
-                    >
-                      Видалити
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {currentPrinters.map((printer, index) => {
+                const realIndex = startIndex + index;
+                return (
+                  <tr key={realIndex} className="hover:bg-gray-50 transition">
+                    <td className="p-4 font-medium text-[#1a3c34]">{printer.name}</td>
+                    <td className="p-4">
+                      <span className="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                        {printer.tag}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      {printer.featured ? (
+                        <span className="text-yellow-500 text-lg" title="Флагманська модель">⭐</span>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {printer.hidden ? (
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Сховано</span>
+                      ) : (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Видимо</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-right space-x-2">
+                      <button
+                        onClick={() => toggleHidden(realIndex)}
+                        className={`px-3 py-1 text-xs rounded-lg transition ${
+                          printer.hidden
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {printer.hidden ? 'Показати' : 'Сховати'}
+                      </button>
+                      <Link
+                        href={`/admin/printers/edit/${realIndex}`}
+                        className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                      >
+                        Редагувати
+                      </Link>
+                      <button
+                        onClick={() => deletePrinter(realIndex)}
+                        className="px-3 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                      >
+                        Видалити
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               {printers.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-gray-400">
+                  <td colSpan={5} className="p-8 text-center text-gray-400">
                     Принтерів поки немає. Натисніть "Додати принтер".
                   </td>
                 </tr>
@@ -152,6 +173,12 @@ export default function AdminPrinters() {
           </table>
         </div>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

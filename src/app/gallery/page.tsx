@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import Link from 'next/link';
 import Image from 'next/image';
+import ClientGallery from './ClientGallery';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -69,33 +70,7 @@ export default async function GalleryPage() {
         </div>
       )}
 
-      {/* Блок з посиланнями на сайти з моделями */}
-      <div className="text-center mt-16">
-        <p className="text-gray-700 text-lg font-bold mb-4 tracking-wide">
-          Шукаєте більше моделей?
-        </p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <a
-            href="https://www.printables.com/model"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative inline-flex items-center justify-center px-8 py-3.5 rounded-full font-bold text-[#1a3c34] bg-gradient-to-r from-[#c9a84c] to-[#b89a3e] shadow-lg shadow-[#c9a84c]/30 hover:shadow-[#c9a84c]/50 transition-all duration-300 hover:scale-105"
-          >
-            Printables.com
-          </a>
-          <a
-            href="https://www.thingiverse.com/search?category_id=73"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative inline-flex items-center justify-center px-8 py-3.5 rounded-full font-bold text-[#1a3c34] bg-gradient-to-r from-[#c9a84c] to-[#b89a3e] shadow-lg shadow-[#c9a84c]/30 hover:shadow-[#c9a84c]/50 transition-all duration-300 hover:scale-105"
-          >
-            Thingiverse
-          </a>
-        </div>
-        <p className="text-gray-400 text-xs mt-4">
-          * Всі моделі на цих сайтах належать їх авторам. Ми не несемо відповідальності за контент.
-        </p>
-      </div>
+      <ClientGallery />
     </div>
   );
 }

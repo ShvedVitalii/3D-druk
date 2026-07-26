@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Pagination from '@/components/ui/Pagination';
 
 type Service = {
   id: number;
@@ -22,10 +23,13 @@ type Service = {
   hidden?: boolean;
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminServices() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
 
   useEffect(() => {
@@ -80,6 +84,12 @@ export default function AdminServices() {
     }
   };
 
+  const totalPages = Math.ceil(services.length / ITEMS_PER_PAGE);
+  const paginatedServices = services.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   if (loading) return <div className="text-center py-10">Завантаження...</div>;
   if (error) return <div className="text-red-500 text-center py-10">{error}</div>;
 
@@ -108,52 +118,55 @@ export default function AdminServices() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {services.map((service, index) => (
-                <tr key={service.id || index} className="hover:bg-gray-50 transition">
-                  <td className="p-4 font-medium text-[#1a3c34]">{service.title}</td>
-                  <td className="p-4">
-                    <span
-                      className="inline-block px-2 py-1 rounded-full text-xs font-semibold text-white"
-                      style={{ backgroundColor: service.categoryColor || '#ccc' }}
-                    >
-                      {service.category}
-                    </span>
-                  </td>
-                  <td className="p-4">{service.price}</td>
-                  <td className="p-4">
-                    {service.hidden ? (
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Сховано</span>
-                    ) : (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Видимо</span>
-                    )}
-                  </td>
-                  <td className="p-4 text-right space-x-2">
-                    <button
-                      onClick={() => toggleHidden(index)}
-                      className={`px-3 py-1 text-xs rounded-lg transition ${
-                        service.hidden
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {service.hidden ? 'Показати' : 'Сховати'}
-                    </button>
-                    <Link
-                      href={`/admin/services/edit/${index}`}
-                      className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
-                    >
-                      Редагувати
-                    </Link>
-                    <button
-                      onClick={() => deleteService(index)}
-                      className="px-3 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
-                    >
-                      Видалити
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {services.length === 0 && (
+              {paginatedServices.map((service, index) => {
+                const realIndex = services.indexOf(service);
+                return (
+                  <tr key={service.id || index} className="hover:bg-gray-50 transition">
+                    <td className="p-4 font-medium text-[#1a3c34]">{service.title}</td>
+                    <td className="p-4">
+                      <span
+                        className="inline-block px-2 py-1 rounded-full text-xs font-semibold text-white"
+                        style={{ backgroundColor: service.categoryColor || '#ccc' }}
+                      >
+                        {service.category}
+                      </span>
+                    </td>
+                    <td className="p-4">{service.price}</td>
+                    <td className="p-4">
+                      {service.hidden ? (
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Сховано</span>
+                      ) : (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Видимо</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-right space-x-2">
+                      <button
+                        onClick={() => toggleHidden(realIndex)}
+                        className={`px-3 py-1 text-xs rounded-lg transition ${
+                          service.hidden
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {service.hidden ? 'Показати' : 'Сховати'}
+                      </button>
+                      <Link
+                        href={`/admin/services/edit/${realIndex}`}
+                        className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                      >
+                        Редагувати
+                      </Link>
+                      <button
+                        onClick={() => deleteService(realIndex)}
+                        className="px-3 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                      >
+                        Видалити
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {paginatedServices.length === 0 && (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-gray-400">
                     Послуг поки немає. Натисніть "Додати послугу".
@@ -164,6 +177,12 @@ export default function AdminServices() {
           </table>
         </div>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

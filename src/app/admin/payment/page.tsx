@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import FileUpload from '@/components/forms/FileUpload';
 
 type PaymentMethod = {
   id: string;
@@ -11,12 +12,14 @@ type PaymentMethod = {
   paymentPurpose: string;
   edrpou?: string;
   accountNumber?: string;
+  qrCode?: string; // Додаємо поле для QR-коду
 };
 
 export default function AdminPayment() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [methods, setMethods] = useState<PaymentMethod[]>([
@@ -27,6 +30,7 @@ export default function AdminPayment() {
       bankName: 'Монобанк',
       paymentPurpose: 'Оплата за 3D-друк, замовлення №',
       edrpou: '1234567890',
+      qrCode: '',
     },
   ]);
 
@@ -53,6 +57,7 @@ export default function AdminPayment() {
               bankName: old.bankName || 'Монобанк',
               paymentPurpose: old.paymentPurpose || 'Оплата за 3D-друк, замовлення №',
               edrpou: old.edrpou || '1234567890',
+              qrCode: old.qrCode || '',
             },
           ]);
         }
@@ -72,6 +77,7 @@ export default function AdminPayment() {
       bankName: '',
       paymentPurpose: '',
       edrpou: '',
+      qrCode: '',
     };
     setMethods([...methods, newMethod]);
   };
@@ -86,6 +92,29 @@ export default function AdminPayment() {
 
   const handleChange = (id: string, field: keyof PaymentMethod, value: string) => {
     setMethods(methods.map(m => (m.id === id ? { ...m, [field]: value } : m)));
+  };
+
+  const handleQrUpload = async (file: File | null, id: string) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.fileUrl) {
+        setMethods(methods.map(m => 
+          m.id === id ? { ...m, qrCode: data.fileUrl } : m
+        ));
+      }
+    } catch (err) {
+      alert('Помилка завантаження QR-коду');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,6 +226,23 @@ export default function AdminPayment() {
                   className="w-full p-3 text-base bg-white rounded-lg border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">QR-код (необов'язково)</label>
+                {method.qrCode && (
+                  <div className="mb-3 relative w-32 h-32 rounded-lg overflow-hidden border border-gray-200">
+                    <img src={method.qrCode} alt="QR-код" className="w-full h-full object-contain" />
+                  </div>
+                )}
+                <FileUpload
+                  onFileSelect={(file) => handleQrUpload(file, method.id)}
+                  accept=".jpg,.jpeg,.png,.webp,.svg"
+                  allowedExtensions={['jpg', 'jpeg', 'png', 'webp', 'svg']}
+                  maxSize={5 * 1024 * 1024}
+                  label={method.qrCode ? 'Замінити QR-код' : 'Завантажити QR-код'}
+                />
+                {uploading && <p className="text-sm text-blue-500 mt-1">Завантаження...</p>}
+              </div>
             </div>
           ))}
 
@@ -205,7 +251,7 @@ export default function AdminPayment() {
             onClick={addMethod}
             className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
           >
-            + Додати ще реквізити (наприклад, ПриватБанк)
+            + Додати ще реквізити
           </button>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -221,7 +267,7 @@ export default function AdminPayment() {
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploading}
               className="px-6 py-2 bg-[#1a3c34] text-white rounded-lg hover:bg-[#2d5a4b] transition disabled:opacity-50"
             >
               {saving ? 'Збереження...' : 'Зберегти'}

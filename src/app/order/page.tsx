@@ -137,7 +137,7 @@ export default function OrderPage() {
   // ===== ВАЛІДАЦІЯ =====
   const validateForm = () => {
     const newErrors: any = {};
-    if (!form.name.trim()) newErrors.name = "Будь ласка, введіть ваше ім'я";
+    if (!form.name.trim()) newErrors.name = "Будь ласка, введіть ваше ПІБ";
     if (!form.phone.trim()) newErrors.phone = "Будь ласка, введіть номер телефону";
     if (form.delivery !== 'pickup') {
       if (!form.city.trim()) newErrors.city = 'Введіть місто доставки';
@@ -329,7 +329,7 @@ export default function OrderPage() {
           {/* ОСОБИСТІ ДАНІ */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ваше ім'я *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ПІБ *</label>
               <input
                 type="text"
                 value={form.name}

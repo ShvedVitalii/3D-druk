@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import FileUpload from '@/components/forms/FileUpload';
 
 type Spec = { label: string; value: string };
 
@@ -19,11 +20,12 @@ type Printer = {
 export default function NewPrinter() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [printer, setPrinter] = useState<Printer>({
     name: '',
     tag: '',
-    img: '/images/printer/default.jpg',
+    img: '',
     specs: [] as Spec[],
     description: '',
     color: '#c9a84c',
@@ -33,6 +35,27 @@ export default function NewPrinter() {
 
   const handleChange = (field: string, value: any) => {
     setPrinter(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.fileUrl) {
+        setPrinter(prev => ({ ...prev, img: data.fileUrl }));
+      }
+    } catch (err) {
+      alert('Помилка завантаження фото');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSpecChange = (index: number, field: 'label' | 'value', value: string) => {
@@ -53,6 +76,14 @@ export default function NewPrinter() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!printer.name.trim()) {
+      alert('Введіть назву принтера');
+      return;
+    }
+    if (!printer.img.trim()) {
+      alert('Завантажте фото принтера');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -90,7 +121,7 @@ export default function NewPrinter() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Назва</label>
+          <label className="block text-sm font-medium text-gray-700">Назва *</label>
           <input
             type="text"
             value={printer.name}
@@ -99,6 +130,7 @@ export default function NewPrinter() {
             required
           />
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700">Тег (наприклад, "Флагманська модель")</label>
           <input
@@ -108,25 +140,35 @@ export default function NewPrinter() {
             className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Шлях до зображення</label>
-          <input
-            type="text"
-            value={printer.img}
-            onChange={(e) => handleChange('img', e.target.value)}
-            className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
-            placeholder="/images/printer/default.jpg"
+          <label className="block text-sm font-medium text-gray-700">Фото принтера *</label>
+          {printer.img && (
+            <div className="mb-3 relative w-40 h-40 rounded-lg overflow-hidden border border-gray-200">
+              <img src={printer.img} alt="Прев'ю" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <FileUpload
+            onFileSelect={handleImageUpload}
+            accept=".jpg,.jpeg,.png,.webp,.svg"
+            allowedExtensions={['jpg', 'jpeg', 'png', 'webp', 'svg']}
+            maxSize={5 * 1024 * 1024}
+            label={printer.img ? 'Замінити фото' : 'Завантажити фото'}
           />
+          {uploading && <p className="text-sm text-blue-500 mt-1">Завантаження...</p>}
+          {printer.img && <p className="text-sm text-green-600 mt-1">✅ Фото завантажено</p>}
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700">Колір акценту (hex)</label>
           <input
-            type="text"
+            type="color"
             value={printer.color}
             onChange={(e) => handleChange('color', e.target.value)}
             className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
           />
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700">Опис</label>
           <textarea
@@ -136,8 +178,9 @@ export default function NewPrinter() {
             className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Характеристики (специфікації)</label>
+          <label className="block text-sm font-medium text-gray-700">Характеристики</label>
           {printer.specs.map((spec, index) => (
             <div key={index} className="flex gap-2 mt-2">
               <input
@@ -171,6 +214,7 @@ export default function NewPrinter() {
             + Додати характеристику
           </button>
         </div>
+
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <input
@@ -182,6 +226,7 @@ export default function NewPrinter() {
             Флагманська модель (показувати на головній)
           </label>
         </div>
+
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <div className="flex justify-end gap-3 pt-4 border-t">
           <button
@@ -193,7 +238,7 @@ export default function NewPrinter() {
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || uploading}
             className="px-6 py-2 bg-[#1a3c34] text-white rounded-lg hover:bg-[#2d5a4b] transition disabled:opacity-50"
           >
             {loading ? 'Збереження...' : 'Створити'}

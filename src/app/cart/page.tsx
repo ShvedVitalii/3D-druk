@@ -1,4 +1,5 @@
 'use client';
+
 import { useCartStore } from '@/store/cartStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -212,7 +213,35 @@ export default function CartPage() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const total = items.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
+  // ===== ФУНКЦІЇ ДЛЯ ОПТОВОЇ ЗНИЖКИ =====
+  const getBulkDiscount = (quantity: number): number => {
+    if (quantity >= 500) return 0.20;
+    if (quantity >= 100) return 0.15;
+    if (quantity >= 50) return 0.10;
+    if (quantity >= 10) return 0.05;
+    return 0;
+  };
+
+  const getDiscountLabel = (quantity: number): string => {
+    if (quantity >= 500) return '20% (500+)';
+    if (quantity >= 100) return '15% (100+)';
+    if (quantity >= 50) return '10% (50+)';
+    if (quantity >= 10) return '5% (10+)';
+    return '';
+  };
+
+  // ===== РОЗРАХУНОК СУМИ З ОПТОВОЮ ЗНИЖКОЮ =====
+  const total = items.reduce((sum, i) => {
+    const qty = i.quantity || 1;
+    let price = i.price || 0;
+    // Тільки для товарів (категорія не "Послуга")
+    if (i.category && i.category !== 'Послуга') {
+      const discount = getBulkDiscount(qty);
+      price = price * (1 - discount);
+    }
+    return sum + price * qty;
+  }, 0);
+
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
 
   const hasConsultationOrVolunteer = items.some(item => 
@@ -241,6 +270,7 @@ export default function CartPage() {
             bankName: 'Монобанк',
             paymentPurpose: 'Оплата за 3D-друк, замовлення №',
             edrpou: '1234567890',
+            qrCode: '',
           },
         ]);
       }
@@ -253,6 +283,7 @@ export default function CartPage() {
           bankName: 'Монобанк',
           paymentPurpose: 'Оплата за 3D-друк, замовлення №',
           edrpou: '1234567890',
+          qrCode: '',
         },
       ]);
     }
@@ -268,7 +299,7 @@ export default function CartPage() {
     const newErrors: { name?: string; phone?: string; city?: string; warehouse?: string } = {};
 
     if (!orderForm.name.trim()) {
-      newErrors.name = 'Будь ласка, введіть ваше ім\'я';
+      newErrors.name = 'Будь ласка, введіть ваше ПІБ';
     }
     if (!orderForm.phone.trim()) {
       newErrors.phone = 'Будь ласка, введіть номер телефону';
@@ -301,7 +332,7 @@ export default function CartPage() {
           <p className="text-gray-500 mb-8">Додайте товари з галереї або сторінки послуг.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/gallery" className="px-6 py-3 bg-[#1a3c34] text-white rounded-full font-medium hover:bg-[#2d5a4b] transition">
-              Перейти до галереї
+              Перейти до каталогу
             </Link>
             <Link href="/services" className="px-6 py-3 border-2 border-[#c9a84c] text-[#c9a84c] rounded-full font-medium hover:bg-[#c9a84c] hover:text-white transition">
               Перейти до послуг
@@ -439,6 +470,10 @@ export default function CartPage() {
     return { type: 'emoji', value: '📦' };
   };
 
+  // Оригінальна сума (без знижок) для розрахунку економії
+  const originalTotal = items.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
+  const totalDiscount = originalTotal - total;
+
   return (
     <div className="pt-32 pb-20 container-custom max-w-7xl mx-auto">
       <h1 className="text-3xl font-heading font-bold text-[#1a3c34] mb-8 flex items-center gap-3">
@@ -467,6 +502,14 @@ export default function CartPage() {
 
             {items.map((item) => {
               const imageInfo = getItemImage(item);
+              // ВИЗНАЧЕННЯ ПОСИЛАННЯ: якщо це послуга – ведемо на /services, інакше на сторінку товару
+              const isService = item.isService === true || item.category === 'Послуга';
+              const productLink = isService ? '/services' : `/product/${item.id}`;
+              const isProduct = item.category && item.category !== 'Послуга';
+              const discount = isProduct ? getBulkDiscount(item.quantity) : 0;
+              const discountLabel = isProduct && item.quantity >= 10 ? getDiscountLabel(item.quantity) : '';
+              const priceWithDiscount = isProduct ? item.price * (1 - discount) : item.price;
+
               return (
                 <motion.div
                   key={item.id}
@@ -519,7 +562,9 @@ export default function CartPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-[#1a3c34]">{item.title}</h4>
+                    <Link href={productLink} className="font-semibold text-[#1a3c34] hover:text-[#c9a84c] transition">
+                      {item.title}
+                    </Link>
                     <p className="text-sm text-gray-500">{item.category}</p>
                     {item.options && Object.keys(item.options).length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
@@ -530,12 +575,28 @@ export default function CartPage() {
                         ))}
                       </div>
                     )}
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
                       <span className="text-lg font-bold text-[#1a3c34]">
-                        {item.price === 0 ? 'Безкоштовно' : `${item.price} ₴`}
+                        {priceWithDiscount === 0 ? 'Безкоштовно' : `${Math.round(priceWithDiscount)} ₴`}
                       </span>
                       {item.originalPrice && item.originalPrice > item.price && (
                         <span className="text-sm text-red-500 line-through">{item.originalPrice} ₴</span>
+                      )}
+                      {item.discount && item.discount > 0 && (
+                        <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
+                          -{item.discount}%
+                        </span>
+                      )}
+                      {/* Оптова знижка */}
+                      {isProduct && item.quantity >= 10 && (
+                        <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                          {discountLabel}
+                        </span>
+                      )}
+                      {!isProduct && item.originalPrice && item.originalPrice > item.price && item.discount === 0 && (
+                        <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
+                          -{Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}%
+                        </span>
                       )}
                     </div>
                   </div>
@@ -592,7 +653,10 @@ export default function CartPage() {
             <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-500">Загальна сума</p>
-                <p className="text-2xl font-bold text-[#1a3c34]">{total} ₴</p>
+                <p className="text-2xl font-bold text-[#1a3c34]">{Math.round(total)} ₴</p>
+                {totalDiscount > 0 && (
+                  <p className="text-xs text-green-600">Економія: {Math.round(totalDiscount)} ₴</p>
+                )}
               </div>
               <div className="flex gap-2">
                 <button
@@ -608,7 +672,7 @@ export default function CartPage() {
               <span className="text-2xl">🎉</span>
               <div>
                 <p className="font-semibold text-green-800">Акція!</p>
-                <p className="text-sm text-green-700">При замовленні від 10 одиниць – знижка 5%.</p>
+                <p className="text-sm text-green-700">При замовленні від 10 одиниць – знижка 5%, від 50 одиниць - знижка 10%, від 100 одиниць - знижка 15%, від 500 одиниць - знижка 20%</p>
               </div>
             </div>
           </div>
@@ -628,16 +692,22 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Сума:</span>
-                <span className="font-bold text-[#1a3c34]">{total} ₴</span>
+                <span className="font-bold text-[#1a3c34]">{Math.round(total)} ₴</span>
               </div>
+              {totalDiscount > 0 && (
+                <div className="flex justify-between text-sm text-green-600 border-t border-gray-200 pt-2">
+                  <span>Знижка за кількість:</span>
+                  <span className="font-bold">-{Math.round(totalDiscount)} ₴</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm border-t border-gray-200 pt-2">
                 <span className="text-gray-600">До сплати:</span>
-                <span className="font-bold text-xl text-[#1a3c34]">{total} ₴</span>
+                <span className="font-bold text-xl text-[#1a3c34]">{Math.round(total)} ₴</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ім'я *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ПІБ *</label>
               <input
                 type="text"
                 value={orderForm.name}
@@ -731,7 +801,6 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* ===== ЗМЕНШЕНА КНОПКА РЕКВІЗИТІВ ===== */}
               <button
                 type="button"
                 onClick={() => setShowPaymentModal(true)}
@@ -841,6 +910,11 @@ export default function CartPage() {
                     <div>
                       <p className="text-xs text-gray-500">Призначення платежу</p>
                       <p className="font-medium text-gray-800">{detail.paymentPurpose}</p>
+                    </div>
+                  )}
+                  {detail.qrCode && (
+                    <div className="flex justify-center mt-2">
+                      <img src={detail.qrCode} alt="QR-код" className="w-32 h-32 object-contain" />
                     </div>
                   )}
                 </div>
