@@ -131,90 +131,92 @@ const TypewriterText = ({ text, className }: { text: string; className?: string 
 };
 
 // =========================
-// 4. Дані для модалки "Супер взірці нового покоління"
-// =========================
-const newGenItems = [
-  // Протези (складні функціональні вироби)
-  {
-    src: '/images/gallery/7.jpg',
-    title: 'Біонічний протез руки',
-    category: 'Протези',
-    tags: ['AMS-друк', 'TPU', 'Точність 0.05 мм'],
-    description: 'Функціональний протез з адаптивним захватом, надрукований за індивідуальними параметрами.',
-  },
-  {
-    src: '/images/gallery/9.jpg',
-    title: 'Протез кисті',
-    category: 'Протези',
-    tags: ['PETG', 'Висока міцність'],
-    description: 'Легка конструкція з посиленими вузлами для щоденного використання.',
-  },
-  {
-    src: '/images/gallery/10.jpg',
-    title: 'Протез передпліччя',
-    category: 'Протези',
-    tags: ['ABS', 'Удароміцний'],
-    description: 'Анатомічна форма, адаптована під конкретного користувача.',
-  },
-  {
-    src: '/images/gallery/12.jpg',
-    title: 'Адаптивний протез',
-    category: 'Протези',
-    tags: ['TPU', 'Гнучкі з\'єднання'],
-    description: 'Модульна система, що дозволяє змінювати конфігурацію.',
-  },
-  {
-    src: '/images/gallery/13.jpg',
-    title: 'Комплексний протез',
-    category: 'Протези',
-    tags: ['Комбінований друк', 'PLA+TPU'],
-    description: 'Поєднання жорстких та гнучких матеріалів для максимальної функціональності.',
-  },
-  // Механізми та прототипи
-  {
-    src: '/images/gallery/4.jpg',
-    title: 'Коробка передач (прототип)',
-    category: 'Механізми',
-    tags: ['ABS', 'Шліфування'],
-    description: 'Тестовий зразок складної механічної системи з рухомими елементами.',
-  },
-  // Фігурки (мистецькі роботи)
-  {
-    src: '/images/gallery/18.jpg',
-    title: 'Фігурка Телелан',
-    category: 'Арт-фігурки',
-    tags: ['PLA', 'Багатоколірний AMS'],
-    description: 'Авторська модель з деталізацією до 0.1 мм, надрукована в 4 кольори.',
-  },
-  {
-    src: '/images/gallery/19.jpg',
-    title: 'Фігурка Чаплін',
-    category: 'Арт-фігурки',
-    tags: ['PLA', 'Постобробка'],
-    description: 'Художня мініатюра з ручною обробкою та фарбуванням.',
-  },
-  // Додаткові складні зразки
-  {
-    src: '/images/gallery/1.jpg',
-    title: 'Масажний ролер (ергономічний)',
-    category: 'Функціональний дизайн',
-    tags: ['TPU', 'Текстурована поверхня'],
-    description: 'Виріб складної форми з оптимізованою структурою для масажу.',
-  },
-];
-
-// =========================
-// 5. Головний компонент Hero
+// 4. Головний компонент Hero
 // =========================
 export default function Hero({ data }: { data?: any }) {
   const [calcOpen, setCalcOpen] = useState(false);
   const [showNewGenModal, setShowNewGenModal] = useState(false);
+  const [models, setModels] = useState<any[]>([]);
+
+  // Завантажуємо дані авторських моделей
+  useEffect(() => {
+    async function fetchCustomModels() {
+      try {
+        const res = await fetch('/api/admin/content');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const items = await res.json();
+        const modelItem = items.find((item: any) => item.key === 'custom_models');
+        if (modelItem?.data && Array.isArray(modelItem.data) && modelItem.data.length > 0) {
+          setModels(modelItem.data);
+        } else {
+          // Дефолтні дані, якщо в базі порожньо
+          setModels([
+            {
+              id: '1',
+              name: 'Протези',
+              elements: [
+                {
+                  id: '1-1',
+                  title: 'Біонічний протез руки',
+                  description: 'Функціональний протез з адаптивним захватом, надрукований за індивідуальними параметрами.',
+                  image: '/images/gallery/7.jpg',
+                  category: 'Протези',
+                  tags: ['AMS-друк', 'TPU', 'Точність 0.05 мм'],
+                },
+                {
+                  id: '1-2',
+                  title: 'Протез кисті',
+                  description: 'Легка конструкція з посиленими вузлами для щоденного використання.',
+                  image: '/images/gallery/9.jpg',
+                  category: 'Протези',
+                  tags: ['PETG', 'Висока міцність'],
+                },
+              ],
+            },
+            {
+              id: '2',
+              name: 'Механізми',
+              elements: [
+                {
+                  id: '2-1',
+                  title: 'Коробка передач (прототип)',
+                  description: 'Тестовий зразок складної механічної системи з рухомими елементами.',
+                  image: '/images/gallery/4.jpg',
+                  category: 'Механізми',
+                  tags: ['ABS', 'Шліфування'],
+                },
+              ],
+            },
+            {
+              id: '3',
+              name: 'Арт-фігурки',
+              elements: [
+                {
+                  id: '3-1',
+                  title: 'Фігурка Телелан',
+                  description: 'Авторська модель з деталізацією до 0.1 мм, надрукована в 4 кольори.',
+                  image: '/images/gallery/18.jpg',
+                  category: 'Арт-фігурки',
+                  tags: ['PLA', 'Багатоколірний AMS'],
+                },
+              ],
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error('Помилка завантаження авторських моделей:', err);
+      }
+    }
+    fetchCustomModels();
+  }, []);
 
   // Дефолтні значення, якщо data відсутня
   const heroData = data || {
     title: 'Ваші ідеї у 3D',
-    subtitle: 'Професійний 3D-друк на замовлення. Швидко, якісно, доступно. Допомагаємо ЗСУ – друкуємо адаптери, кріплення та тактичні аксесуари.',
-    buttonText: 'Замовити друк'
+    subtitle:
+      'Професійний 3D-друк на замовлення. Швидко, якісно, доступно. Допомагаємо ЗСУ – друкуємо адаптери, кріплення та тактичні аксесуари.',
+    buttonText: 'Замовити друк',
+    heroImage: '/images/printer/x1carbon.jpg',
   };
 
   const mouseX = useMotionValue(0);
@@ -266,16 +268,16 @@ export default function Hero({ data }: { data?: any }) {
             transition={{ duration: 0.8, type: 'spring', damping: 20 }}
             className="text-white"
           >
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.3 }}
-  className="inline-block bg-white/10 backdrop-blur-sm px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wider text-[#7ec8a3] border border-[#7ec8a3]/20 mb-4"
->
-  <Link href="/gallery" className="block w-full h-full">
-    🚀 3D-друк нового покоління
-  </Link>
-</motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="inline-block bg-white/10 backdrop-blur-sm px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wider text-[#7ec8a3] border border-[#7ec8a3]/20 mb-4"
+            >
+              <Link href="/gallery" className="block w-full h-full">
+                🚀 3D-друк нового покоління
+              </Link>
+            </motion.div>
 
             <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-6">
               Втілюємо <br />
@@ -347,7 +349,7 @@ export default function Hero({ data }: { data?: any }) {
             >
               <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl shadow-[#7ec8a3]/20 border-2 border-[#7ec8a3]/30">
                 <Image
-                  src="/images/printer/x1carbon.jpg"
+                  src={heroData.heroImage || '/images/printer/x1carbon.jpg'}
                   alt="Bambu Lab X1 Carbon"
                   fill
                   className="object-cover"
@@ -463,52 +465,52 @@ export default function Hero({ data }: { data?: any }) {
                 </p>
               </div>
 
-              {/* Групування за категоріями */}
-              {['Протези', 'Механізми', 'Арт-фігурки', 'Функціональний дизайн'].map((cat) => {
-                const items = newGenItems.filter((item) => item.category === cat);
-                if (items.length === 0) return null;
-                return (
-                  <div key={cat} className="mb-6">
+              {models.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  Немає доданих моделей. Додайте їх в адмін-панелі.
+                </div>
+              ) : (
+                models.map((model: any) => (
+                  <div key={model.id} className="mb-8">
                     <h3 className="text-xl font-bold text-[#1a3c34] mb-3 flex items-center gap-2">
                       <span className="w-1 h-6 bg-[#c9a84c] rounded-full"></span>
-                      {cat}
+                      {model.name}
                     </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {items.map((img, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: idx * 0.05 }}
-                          whileHover={{ scale: 1.05, zIndex: 10 }}
-                          className="relative aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer group"
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {model.elements.map((element: any) => (
+                        <div
+                          key={element.id}
+                          className="bg-gray-50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition border border-gray-200"
                         >
-                          <Image
-                            src={img.src}
-                            alt={img.title}
-                            fill
-                            className="object-cover transition-transform group-hover:scale-110 duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-3">
-                            <p className="text-white text-sm font-bold">{img.title}</p>
-                            <p className="text-white/80 text-xs">{img.description}</p>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {img.tags.map((tag, i) => (
-                                <span
-                                  key={i}
-                                  className="bg-[#c9a84c]/80 text-white text-[10px] px-2 py-0.5 rounded-full"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
+                          <div className="relative h-56">
+                            <img
+                              src={element.image || '/images/placeholder.jpg'}
+                              alt={element.title}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                        </motion.div>
+                          <div className="p-4">
+                            <h4 className="font-bold text-[#1a3c34]">{element.title}</h4>
+                            <p className="text-sm text-gray-600 mt-1">{element.description}</p>
+                            {element.tags && element.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {element.tags.map((tag: string, i: number) => (
+                                  <span
+                                    key={i}
+                                    className="bg-[#c9a84c]/10 text-[#c9a84c] text-xs px-2 py-0.5 rounded-full"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
-                );
-              })}
+                ))
+              )}
 
               {/* Технологічний блок */}
               <div className="bg-gradient-to-r from-[#1a3c34]/5 to-[#c9a84c]/10 rounded-xl p-4 mb-6 border border-[#c9a84c]/20">
