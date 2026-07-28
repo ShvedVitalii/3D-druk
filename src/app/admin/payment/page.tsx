@@ -12,7 +12,7 @@ type PaymentMethod = {
   paymentPurpose: string;
   edrpou?: string;
   accountNumber?: string;
-  qrCode?: string; // Додаємо поле для QR-коду
+  qrCode?: string;
 };
 
 export default function AdminPayment() {
@@ -115,6 +115,14 @@ export default function AdminPayment() {
     } finally {
       setUploading(false);
     }
+  };
+
+  // Нова функція: видалення QR-коду
+  const removeQrCode = (id: string) => {
+    if (!confirm('Ви впевнені, що хочете видалити QR-код?')) return;
+    setMethods(methods.map(m => 
+      m.id === id ? { ...m, qrCode: '' } : m
+    ));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -230,8 +238,17 @@ export default function AdminPayment() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">QR-код (необов'язково)</label>
                 {method.qrCode && (
-                  <div className="mb-3 relative w-32 h-32 rounded-lg overflow-hidden border border-gray-200">
-                    <img src={method.qrCode} alt="QR-код" className="w-full h-full object-contain" />
+                  <div className="mb-3 flex items-center gap-4">
+                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-gray-200">
+                      <img src={method.qrCode} alt="QR-код" className="w-full h-full object-contain" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeQrCode(method.id)}
+                      className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm"
+                    >
+                      ✕ Видалити QR
+                    </button>
                   </div>
                 )}
                 <FileUpload

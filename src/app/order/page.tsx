@@ -716,66 +716,79 @@ export default function OrderPage() {
         </div>
       )}
 
-      {/* МОДАЛКА РЕКВІЗИТИ */}
-      {showPaymentModal && paymentDetails.length > 0 && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={() => setShowPaymentModal(false)}
-        >
-          <div
-            className="bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-[#1a3c34] flex items-center gap-2">
-                <span className="text-2xl">💳</span> Реквізити для оплати
-              </h3>
-              <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-700 text-2xl transition">
-                ✕
-              </button>
+{/* ===== МОДАЛКА РЕКВІЗИТИ (ЗБІЛЬШЕНА) ===== */}
+{showPaymentModal && paymentDetails.length > 0 && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+    onClick={() => setShowPaymentModal(false)}
+  >
+    <div
+      className="bg-white rounded-3xl max-w-lg w-full shadow-2xl p-8 max-h-[95vh] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-2xl font-bold text-[#1a3c34] flex items-center gap-3">
+          <span className="text-3xl">💳</span> Реквізити для оплати
+        </h3>
+        <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-700 text-3xl transition">
+          ✕
+        </button>
+      </div>
+      <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-200 max-h-[70vh] overflow-y-auto">
+        {paymentDetails.map((detail, idx) => (
+          <div key={idx} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xl font-bold text-[#c9a84c] bg-[#c9a84c]/10 px-3 py-1 rounded-full">#{idx + 1}</span>
+              <span className="text-base font-semibold text-gray-700">{detail.bankName}</span>
             </div>
-            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200 max-h-96 overflow-y-auto">
-              {paymentDetails.map((detail, idx) => (
-                <div key={idx} className="border-b border-gray-200 last:border-0 pb-3 last:pb-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-[#c9a84c]">#{idx + 1}</span>
-                    <span className="text-sm font-medium text-gray-600">{detail.bankName}</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Отримувач</p>
-                    <p className="font-medium text-gray-800">{detail.recipientName}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">IBAN</p>
-                    <p className="font-mono font-bold text-sm text-[#1a3c34] break-all">{detail.iban}</p>
-                  </div>
-                  {detail.edrpou && (
-                    <div>
-                      <p className="text-xs text-gray-500">ЄДРПОУ / РНОКПП</p>
-                      <p className="font-medium text-gray-800">{detail.edrpou}</p>
-                    </div>
-                  )}
-                  {detail.paymentPurpose && (
-                    <div>
-                      <p className="text-xs text-gray-500">Призначення платежу</p>
-                      <p className="font-medium text-gray-800">{detail.paymentPurpose}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-                ⚠️ Після оплати вкажіть номер платежу в полі вище та підтвердіть оплату.
+            <div className="grid grid-cols-1 gap-2">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Отримувач</p>
+                <p className="font-medium text-gray-800 text-base">{detail.recipientName}</p>
               </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">IBAN</p>
+                <p className="font-mono font-bold text-base text-[#1a3c34] break-all bg-white p-2 rounded-lg border border-gray-200">
+                  {detail.iban}
+                </p>
+              </div>
+              {detail.edrpou && (
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">ЄДРПОУ / РНОКПП</p>
+                  <p className="font-medium text-gray-800">{detail.edrpou}</p>
+                </div>
+              )}
+              {detail.paymentPurpose && (
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">Призначення платежу</p>
+                  <p className="font-medium text-gray-800">{detail.paymentPurpose}</p>
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => setShowPaymentModal(false)}
-              className="mt-4 w-full py-2 bg-[#1a3c34] text-white rounded-lg font-medium hover:bg-[#2d5a4b] transition"
-            >
-              Закрити
-            </button>
+            {/* ===== QR-код (великий) ===== */}
+            {detail.qrCode && (
+              <div className="mt-4 flex flex-col items-center bg-white p-4 rounded-xl border-2 border-[#c9a84c]/30 shadow-inner">
+                <p className="text-sm font-medium text-gray-600 mb-3">📱 Відскануйте QR-код для оплати</p>
+                <div className="w-80 h-80 rounded-xl overflow-hidden border-2 border-gray-300 bg-white p-2 shadow-lg">
+                  <img src={detail.qrCode} alt="QR-код для оплати" className="w-full h-full object-contain" />
+                </div>
+              </div>
+            )}
           </div>
+        ))}
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+          <p className="font-semibold">⚠️ Після оплати вкажіть номер платежу в полі вище та підтвердіть оплату.</p>
         </div>
-      )}
+      </div>
+      <button
+        onClick={() => setShowPaymentModal(false)}
+        className="mt-6 w-full py-3 bg-[#1a3c34] text-white rounded-xl font-bold hover:bg-[#2d5a4b] transition text-lg"
+      >
+        Закрити
+      </button>
+    </div>
+  </div>
+)}
 
       <CalculatorModal isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
     </div>

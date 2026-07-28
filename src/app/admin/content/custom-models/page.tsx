@@ -40,49 +40,12 @@ export default function EditCustomModels() {
       const items = await res.json();
       const modelItem = items.find((item: any) => item.key === 'custom_models');
       if (modelItem?.data && Array.isArray(modelItem.data) && modelItem.data.length > 0) {
-        // Нормалізація даних: переконуємося, що кожна модель має поле elements (масив)
-        const normalized = modelItem.data.map((m: any) => {
-          // Якщо є поле elements і це масив – використовуємо його
-          if (Array.isArray(m.elements)) {
-            return m;
-          }
-          // Якщо є поле photos (старий формат) – конвертуємо
-          if (Array.isArray(m.photos)) {
-            return {
-              ...m,
-              elements: m.photos.map((p: any) => ({
-                id: p.id || `${m.id}-${Date.now()}-${Math.random()}`,
-                title: p.title || 'Фото',
-                description: p.description || '',
-                image: p.src || p.image || '',
-                category: m.category || 'Категорія',
-                tags: m.tags || [],
-              })),
-            };
-          }
-          // Якщо є поле image (один файл) – створюємо один елемент
-          if (m.image) {
-            return {
-              ...m,
-              elements: [
-                {
-                  id: `${m.id}-0`,
-                  title: m.title || 'Модель',
-                  description: m.description || '',
-                  image: m.image,
-                  category: m.category || 'Категорія',
-                  tags: m.tags || [],
-                },
-              ],
-            };
-          }
-          // Якщо немає жодних даних – створюємо порожній масив
-          return {
-            ...m,
-            elements: [],
-          };
-        });
-        setModels(normalized);
+        // Переконуємося, що кожна модель має поле elements (масив)
+        const data = modelItem.data.map((m: any) => ({
+          ...m,
+          elements: Array.isArray(m.elements) ? m.elements : [],
+        }));
+        setModels(data);
       } else {
         // Дефолтні дані
         setModels([
@@ -310,90 +273,84 @@ export default function EditCustomModels() {
               </div>
 
               <div className="space-y-3 mt-3">
-                {model.elements && model.elements.length > 0 ? (
-                  model.elements.map((element) => (
-                    <div key={element.id} className="bg-white rounded-lg border border-gray-200 p-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm font-medium text-gray-500">Виріб</span>
-                        <button
-                          type="button"
-                          onClick={() => removeElement(model.id, element.id)}
-                          className="text-red-400 hover:text-red-600 text-xs"
-                        >
-                          ✕
-                        </button>
+                {(model.elements || []).map((element) => (
+                  <div key={element.id} className="bg-white rounded-lg border border-gray-200 p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-sm font-medium text-gray-500">Виріб</span>
+                      <button
+                        type="button"
+                        onClick={() => removeElement(model.id, element.id)}
+                        className="text-red-400 hover:text-red-600 text-xs"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600">Назва</label>
+                        <input
+                          type="text"
+                          value={element.title}
+                          onChange={(e) =>
+                            handleElementChange(model.id, element.id, 'title', e.target.value)
+                          }
+                          className="w-full p-1.5 bg-gray-50 rounded border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
+                        />
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600">Назва</label>
-                          <input
-                            type="text"
-                            value={element.title}
-                            onChange={(e) =>
-                              handleElementChange(model.id, element.id, 'title', e.target.value)
-                            }
-                            className="w-full p-1.5 bg-gray-50 rounded border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600">Категорія</label>
+                        <input
+                          type="text"
+                          value={element.category}
+                          onChange={(e) =>
+                            handleElementChange(model.id, element.id, 'category', e.target.value)
+                          }
+                          className="w-full p-1.5 bg-gray-50 rounded border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-gray-600">Опис</label>
+                        <input
+                          type="text"
+                          value={element.description}
+                          onChange={(e) =>
+                            handleElementChange(model.id, element.id, 'description', e.target.value)
+                          }
+                          className="w-full p-1.5 bg-gray-50 rounded border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-gray-600">Теги (через кому)</label>
+                        <input
+                          type="text"
+                          value={element.tags.join(', ')}
+                          onChange={(e) =>
+                            handleElementTagsChange(model.id, element.id, e.target.value)
+                          }
+                          className="w-full p-1.5 bg-gray-50 rounded border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Фото</label>
+                        <div className="flex items-center gap-3">
+                          {element.image && (
+                            <div className="relative w-16 h-16 rounded overflow-hidden border border-gray-200 flex-shrink-0">
+                              <Image src={element.image} alt={element.title} fill className="object-cover" unoptimized />
+                            </div>
+                          )}
+                          <FileUpload
+                            onFileSelect={(file) => handleImageUpload(file, model.id, element.id)}
+                            accept=".jpg,.jpeg,.png,.webp,.svg"
+                            allowedExtensions={['jpg', 'jpeg', 'png', 'webp', 'svg']}
+                            maxSize={5 * 1024 * 1024}
+                            label={element.image ? 'Замінити' : 'Завантажити'}
                           />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600">Категорія</label>
-                          <input
-                            type="text"
-                            value={element.category}
-                            onChange={(e) =>
-                              handleElementChange(model.id, element.id, 'category', e.target.value)
-                            }
-                            className="w-full p-1.5 bg-gray-50 rounded border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-xs font-medium text-gray-600">Опис</label>
-                          <input
-                            type="text"
-                            value={element.description}
-                            onChange={(e) =>
-                              handleElementChange(model.id, element.id, 'description', e.target.value)
-                            }
-                            className="w-full p-1.5 bg-gray-50 rounded border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-xs font-medium text-gray-600">Теги (через кому)</label>
-                          <input
-                            type="text"
-                            value={element.tags.join(', ')}
-                            onChange={(e) =>
-                              handleElementTagsChange(model.id, element.id, e.target.value)
-                            }
-                            className="w-full p-1.5 bg-gray-50 rounded border border-gray-200 focus:border-[#c9a84c] outline-none text-sm"
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Фото</label>
-                          <div className="flex items-center gap-3">
-                            {element.image && (
-                              <div className="relative w-16 h-16 rounded overflow-hidden border border-gray-200 flex-shrink-0">
-                                <Image src={element.image} alt={element.title} fill className="object-cover" unoptimized />
-                              </div>
-                            )}
-                            <FileUpload
-                              onFileSelect={(file) => handleImageUpload(file, model.id, element.id)}
-                              accept=".jpg,.jpeg,.png,.webp,.svg"
-                              allowedExtensions={['jpg', 'jpeg', 'png', 'webp', 'svg']}
-                              maxSize={5 * 1024 * 1024}
-                              label={element.image ? 'Замінити' : 'Завантажити'}
-                            />
-                            {uploading && <span className="text-xs text-blue-500">Завантаження...</span>}
-                          </div>
+                          {uploading && <span className="text-xs text-blue-500">Завантаження...</span>}
                         </div>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-gray-400 text-sm bg-white rounded-lg border border-gray-200">
-                    Немає виробів у цій групі. Додайте перший!
                   </div>
-                )}
+                ))}
 
                 <button
                   type="button"

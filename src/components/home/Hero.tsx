@@ -426,137 +426,142 @@ export default function Hero({ data }: { data?: any }) {
       {/* Калькулятор */}
       <CalculatorModal isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
 
-      {/* ============================================================
-          МОДАЛКА "Супер взірці 3D-друку нового покоління"
-          ============================================================ */}
-      <AnimatePresence>
-        {showNewGenModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={() => setShowNewGenModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: 30 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl transition z-10 bg-white/80 rounded-full w-10 h-10 flex items-center justify-center"
-                onClick={() => setShowNewGenModal(false)}
-              >
-                ✕
-              </button>
+{/* ============================================================
+    МОДАЛКА "Супер взірці 3D-друку нового покоління"
+    ============================================================ */}
+<AnimatePresence>
+  {showNewGenModal && (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={() => setShowNewGenModal(false)}
+    >
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0, y: 30 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.8, opacity: 0, y: 30 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl transition z-10 bg-white/80 rounded-full w-10 h-10 flex items-center justify-center"
+          onClick={() => setShowNewGenModal(false)}
+        >
+          ✕
+        </button>
 
-              <div className="text-center mb-6">
-                <span className="inline-block text-5xl mb-2">✨</span>
-                <h2 className="text-3xl md:text-4xl font-heading font-bold text-[#1a3c34]">
-                  Супер взірці 3D-друку нового покоління
-                </h2>
-                <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
-                  Це не просто галерея – це наші найскладніші, найунікальніші проєкти,
-                  створені на замовлення. Тут ви побачите{' '}
-                  <span className="font-semibold text-[#c9a84c]">багатокольоровий друк (AMS)</span>,
-                  <span className="font-semibold text-[#c9a84c]"> функціональні протези</span>,
-                  <span className="font-semibold text-[#c9a84c]"> складні механізми</span> та
-                  <span className="font-semibold text-[#c9a84c]"> художні мініатюри</span>.
-                </p>
-              </div>
+        <div className="text-center mb-6">
+          <span className="inline-block text-5xl mb-2">✨</span>
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-[#1a3c34]">
+            Супер взірці 3D-друку нового покоління
+          </h2>
+          <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
+            Це не просто галерея – це наші найскладніші, найунікальніші проєкти,
+            створені на замовлення. Тут ви побачите{' '}
+            <span className="font-semibold text-[#c9a84c]">багатокольоровий друк (AMS)</span>,
+            <span className="font-semibold text-[#c9a84c]"> функціональні протези</span>,
+            <span className="font-semibold text-[#c9a84c]"> складні механізми</span> та
+            <span className="font-semibold text-[#c9a84c]"> художні мініатюри</span>.
+          </p>
+        </div>
 
-              {models.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                  Немає доданих моделей. Додайте їх в адмін-панелі.
-                </div>
-              ) : (
-                models.map((model: any) => (
-                  <div key={model.id} className="mb-8">
-                    <h3 className="text-xl font-bold text-[#1a3c34] mb-3 flex items-center gap-2">
-                      <span className="w-1 h-6 bg-[#c9a84c] rounded-full"></span>
-                      {model.name}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {model.elements.map((element: any) => (
-                        <div
-                          key={element.id}
-                          className="bg-gray-50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition border border-gray-200"
-                        >
-                          <div className="relative h-56">
-                            <img
-                              src={element.image || '/images/placeholder.jpg'}
-                              alt={element.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="p-4">
-                            <h4 className="font-bold text-[#1a3c34]">{element.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{element.description}</p>
-                            {element.tags && element.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {element.tags.map((tag: string, i: number) => (
-                                  <span
-                                    key={i}
-                                    className="bg-[#c9a84c]/10 text-[#c9a84c] text-xs px-2 py-0.5 rounded-full"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-
-              {/* Технологічний блок */}
-              <div className="bg-gradient-to-r from-[#1a3c34]/5 to-[#c9a84c]/10 rounded-xl p-4 mb-6 border border-[#c9a84c]/20">
-                <h4 className="font-bold text-[#1a3c34] flex items-center gap-2">
-                  <span className="text-2xl">🚀</span> Чому це нове покоління?
-                </h4>
-                <ul className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#c9a84c]">✔</span> Багатоколірний друк (AMS) до 16 кольорів
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#c9a84c]">✔</span> Точність до 0.05 мм
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#c9a84c]">✔</span> Складні геометрії без підтримок
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#c9a84c]">✔</span> Інженерні та біосумісні матеріали
-                  </li>
-                </ul>
-              </div>
-
-              <div className="text-center space-y-3">
-                <p className="text-gray-500 text-sm">
-                  Хочете створити щось подібне або навіть складніше? Ми розробимо унікальну модель спеціально для вас.
-                </p>
-                <div className="flex flex-wrap justify-center gap-4">
-                  <Button
-                    href="/services"
-                    variant="primary"
-                    className="bg-[#c9a84c] text-[#1a3c34] hover:bg-[#b89a3e]"
-                  >
-                    ✨ Замовити індивідуальну розробку
-                  </Button>
-                  <Button href="/gallery" variant="secondary">
-                    Переглянути всі роботи
-                  </Button>
-                </div>
-                <p className="text-xs text-gray-400">
-                  Кожен проєкт – унікальний, створений з урахуванням ваших побажань і технічних вимог.
-                </p>
-              </div>
-            </motion.div>
+        {models.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            Немає доданих моделей. Додайте їх в адмін-панелі.
           </div>
+        ) : (
+          models.map((model: any) => (
+            <div key={model.id} className="mb-8">
+              <h3 className="text-xl font-bold text-[#1a3c34] mb-3 flex items-center gap-2">
+                <span className="w-1 h-6 bg-[#c9a84c] rounded-full"></span>
+                {model.name}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {(model.elements || []).map((element: any, idx: number) => (
+                  <motion.div
+                    key={element.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    whileHover={{ scale: 1.05, zIndex: 10 }}
+                    className="relative aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer group border border-gray-200"
+                  >
+                    <img
+                      src={element.image || '/images/placeholder.jpg'}
+                      alt={element.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-3">
+                      <p className="text-white text-sm font-bold leading-tight line-clamp-1">{element.title}</p>
+                      <p className="text-white/80 text-xs leading-tight line-clamp-2 mt-0.5">{element.description}</p>
+                      {element.tags && element.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {element.tags.slice(0, 3).map((tag: string, i: number) => (
+                            <span
+                              key={i}
+                              className="bg-[#c9a84c]/80 text-white text-[10px] px-1.5 py-0.5 rounded-full"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {element.tags.length > 3 && (
+                            <span className="text-white/60 text-[10px]">+{element.tags.length - 3}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          ))
         )}
-      </AnimatePresence>
+
+        {/* Технологічний блок */}
+        <div className="bg-gradient-to-r from-[#1a3c34]/5 to-[#c9a84c]/10 rounded-xl p-4 mb-6 border border-[#c9a84c]/20">
+          <h4 className="font-bold text-[#1a3c34] flex items-center gap-2">
+            <span className="text-2xl">🚀</span> Чому це нове покоління?
+          </h4>
+          <ul className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
+            <li className="flex items-center gap-2">
+              <span className="text-[#c9a84c]">✔</span> Багатоколірний друк (AMS) до 16 кольорів
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-[#c9a84c]">✔</span> Точність до 0.05 мм
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-[#c9a84c]">✔</span> Складні геометрії без підтримок
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-[#c9a84c]">✔</span> Інженерні та біосумісні матеріали
+            </li>
+          </ul>
+        </div>
+
+        <div className="text-center space-y-3">
+          <p className="text-gray-500 text-sm">
+            Хочете створити щось подібне або навіть складніше? Ми розробимо унікальну модель спеціально для вас.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button
+              href="/services"
+              variant="primary"
+              className="bg-[#c9a84c] text-[#1a3c34] hover:bg-[#b89a3e]"
+            >
+              ✨ Замовити індивідуальну розробку
+            </Button>
+            <Button href="/gallery" variant="secondary">
+              Переглянути всі роботи
+            </Button>
+          </div>
+          <p className="text-xs text-gray-400">
+            Кожен проєкт – унікальний, створений з урахуванням ваших побажань і технічних вимог.
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  )}
+</AnimatePresence>
     </>
   );
 }
