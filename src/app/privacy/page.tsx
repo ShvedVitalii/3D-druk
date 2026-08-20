@@ -1,4 +1,39 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
 export default function PrivacyPage() {
+  const [contacts, setContacts] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchContacts() {
+      try {
+        const res = await fetch('/api/admin/content');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const items = await res.json();
+        const contactsItem = items.find((item: any) => item.key === 'contacts');
+        if (contactsItem?.data) {
+          setContacts(contactsItem.data);
+        } else {
+          // Дефолтні контакти, якщо в базі немає
+          setContacts({
+            phone: '+38 098 0751707',
+            email: 'komarnytskiy.yura@gmail.com',
+            address: '82400, м. Стрий, вул. Народна, 8',
+          });
+        }
+      } catch (err) {
+        console.error('Помилка завантаження контактів:', err);
+        setContacts({
+          phone: '+38 098 0751707',
+          email: 'komarnytskiy.yura@gmail.com',
+          address: '82400, м. Стрий, вул. Народна, 8',
+        });
+      }
+    }
+    fetchContacts();
+  }, []);
+
   return (
     <div className="pt-32 pb-20 container-custom max-w-3xl mx-auto">
       <h1 className="text-4xl font-heading font-bold text-[#1a3c34] mb-6">Політика конфіденційності</h1>
@@ -34,7 +69,20 @@ export default function PrivacyPage() {
         </ul>
 
         <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">5. Контакти</h2>
-        <p>Якщо у вас є запитання щодо цієї Політики конфіденційності, зв'яжіться з нами за електронною адресою: <a href="mailto:hello@3dprint.com" className="text-[#c9a84c] hover:underline">hello@3dprint.com</a></p>
+        <p>
+          Якщо у вас є запитання щодо цієї Політики конфіденційності, зв'яжіться з нами за електронною адресою:{' '}
+          <a href={`mailto:${contacts?.email || 'komarnytskiy.yura@gmail.com'}`} className="text-[#c9a84c] hover:underline">
+            {contacts?.email || 'komarnytskiy.yura@gmail.com'}
+          </a>
+          {' '}або за телефоном{' '}
+          <a href={`tel:${contacts?.phone?.replace(/\s/g, '') || '+380980751707'}`} className="text-[#c9a84c] hover:underline">
+            {contacts?.phone || '+38 098 0751707'}
+          </a>
+          .
+        </p>
+        {contacts?.address && (
+          <p>Наша адреса: {contacts.address}</p>
+        )}
       </div>
     </div>
   );

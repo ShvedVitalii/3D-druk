@@ -29,7 +29,7 @@ export default function ContactsPage() {
           setContacts(d);
         } else {
           setContacts({
-            phone: '+38 098 0751707',
+            phone: '+380 98 075 17 07',
             email: 'komarnytskiy.yura@gmail.com',
             address: '82400, Львівська обл., м. Стрий, вул. Народна, 8',
             workHours: 'Пн–Пт 9:00–18:00',

@@ -1,4 +1,38 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
 export default function TermsPage() {
+  const [contacts, setContacts] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchContacts() {
+      try {
+        const res = await fetch('/api/admin/content');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const items = await res.json();
+        const contactsItem = items.find((item: any) => item.key === 'contacts');
+        if (contactsItem?.data) {
+          setContacts(contactsItem.data);
+        } else {
+          setContacts({
+            phone: '+38 098 0751707',
+            email: 'komarnytskiy.yura@gmail.com',
+            address: '82400, м. Стрий, вул. Народна, 8',
+          });
+        }
+      } catch (err) {
+        console.error('Помилка завантаження контактів:', err);
+        setContacts({
+          phone: '+38 098 0751707',
+          email: 'komarnytskiy.yura@gmail.com',
+          address: '82400, м. Стрий, вул. Народна, 8',
+        });
+      }
+    }
+    fetchContacts();
+  }, []);
+
   return (
     <div className="pt-32 pb-20 container-custom max-w-3xl mx-auto">
       <h1 className="text-4xl font-heading font-bold text-[#1a3c34] mb-6">Умови використання</h1>
@@ -27,7 +61,7 @@ export default function TermsPage() {
 
         <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">4. Доставка</h2>
         <ul className="list-disc pl-6 space-y-1">
-          <li>Доставляємо Новою Поштою (1-3 дні), Укрпоштою (2-5 днів) або самовивіз з нашого офісу у Львові.</li>
+          <li>Доставляємо Новою Поштою (1-3 дні), Укрпоштою (2-5 днів) або самовивіз з нашого офісу у Стрию.</li>
           <li>Вартість доставки згідно з тарифами перевізника.</li>
           <li>Ми не несемо відповідальності за затримки, спричинені роботою поштових служб.</li>
         </ul>
@@ -43,7 +77,20 @@ export default function TermsPage() {
         <p>Ми залишаємо за собою право змінювати ці Умови в будь-який час. Зміни набувають чинності з моменту публікації на сайті. Рекомендуємо періодично переглядати цю сторінку.</p>
 
         <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">7. Контакти</h2>
-        <p>З усіх питань звертайтеся до нас за адресою: <a href="mailto:hello@3dprint.com" className="text-[#c9a84c] hover:underline">hello@3dprint.com</a> або за телефоном <a href="tel:+380671234567" className="text-[#c9a84c] hover:underline">+380 (67) 123-45-67</a>.</p>
+        <p>
+          З усіх питань звертайтеся до нас за адресою:{' '}
+          <a href={`mailto:${contacts?.email || 'komarnytskiy.yura@gmail.com'}`} className="text-[#c9a84c] hover:underline">
+            {contacts?.email || 'komarnytskiy.yura@gmail.com'}
+          </a>
+          {' '}або за телефоном{' '}
+          <a href={`tel:${contacts?.phone?.replace(/\s/g, '') || '+380980751707'}`} className="text-[#c9a84c] hover:underline">
+            {contacts?.phone || '+38 098 0751707'}
+          </a>
+          .
+        </p>
+        {contacts?.address && (
+          <p>Наша адреса: {contacts.address}</p>
+        )}
       </div>
     </div>
   );
