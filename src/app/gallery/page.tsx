@@ -18,6 +18,9 @@ async function getCatalog() {
 export default async function GalleryPage() {
   const { categories } = await getCatalog();
 
+  // Сортуємо категорії за полем order (від меншого до більшого)
+  const sortedCategories = [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+
   return (
     <div className="pt-32 pb-20 container-custom max-w-6xl mx-auto">
       <div className="text-center mb-12">
@@ -27,7 +30,7 @@ export default async function GalleryPage() {
         </p>
       </div>
 
-      {categories.length === 0 ? (
+      {sortedCategories.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
           <div className="text-6xl mb-4">📦</div>
           <p className="text-gray-400 text-lg">Категорій поки немає</p>
@@ -35,38 +38,58 @@ export default async function GalleryPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((cat: any) => (
-            <Link
-              key={cat.id}
-              href={`/category/${cat.slug}`}
-              className="group block"
-            >
-              <div className="relative h-64 rounded-2xl overflow-hidden shadow-lg border border-gray-200 group-hover:shadow-2xl transition-all duration-300 group-hover:scale-[1.02]">
-                {cat.image ? (
-                  <Image
-                    src={cat.image}
-                    alt={cat.name}
-                    fill
-                    className="object-cover group-hover:scale-110 transition duration-500"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#1a3c34] to-[#2d5a4b] flex items-center justify-center text-8xl text-white/30">
-                    📁
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-6">
-                  <h2 className="text-white text-3xl font-bold group-hover:text-[#c9a84c] transition">{cat.name}</h2>
-                  {cat.description && (
-                    <p className="text-white/80 text-sm mt-1 line-clamp-2">{cat.description}</p>
+          {sortedCategories.map((cat: any) => {
+            const badgeColors: Record<string, string> = {
+              'Акції': 'bg-red-500',
+              'Новинки': 'bg-blue-500',
+              'Авторські вироби': 'bg-yellow-500',
+            };
+            const badgeEmojis: Record<string, string> = {
+              'Акції': '🔥',
+              'Новинки': '✨',
+              'Авторські вироби': '🎨',
+            };
+            const badgeColor = badgeColors[cat.badge] || 'bg-gray-500';
+            const badgeEmoji = badgeEmojis[cat.badge] || '';
+
+            return (
+              <Link
+                key={cat.id}
+                href={`/category/${cat.slug}`}
+                className="group block"
+              >
+                <div className="relative h-64 rounded-2xl overflow-hidden shadow-lg border border-gray-200 group-hover:shadow-2xl transition-all duration-300 group-hover:scale-[1.02]">
+                  {cat.image ? (
+                    <Image
+                      src={cat.image}
+                      alt={cat.name}
+                      fill
+                      className="object-cover group-hover:scale-110 transition duration-500"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#1a3c34] to-[#2d5a4b] flex items-center justify-center text-8xl text-white/30">
+                      📁
+                    </div>
                   )}
-                  <div className="mt-3 inline-flex items-center text-[#c9a84c] text-sm font-semibold opacity-0 group-hover:opacity-100 transition">
-                    Переглянути товари →
+                  {cat.badge && (
+                    <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg z-10 ${badgeColor}`}>
+                      {badgeEmoji} {cat.badge}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-6">
+                    <h2 className="text-white text-3xl font-bold group-hover:text-[#c9a84c] transition">{cat.name}</h2>
+                    {cat.description && (
+                      <p className="text-white/80 text-sm mt-1 line-clamp-2">{cat.description}</p>
+                    )}
+                    <div className="mt-3 inline-flex items-center text-[#c9a84c] text-sm font-semibold opacity-0 group-hover:opacity-100 transition">
+                      Переглянути товари →
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
 

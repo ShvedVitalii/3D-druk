@@ -3,95 +3,84 @@
 import { useEffect, useState } from 'react';
 
 export default function TermsPage() {
-  const [contacts, setContacts] = useState<any>(null);
+  const [data, setData] = useState({ title: 'Умови використання', text: '' });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchContacts() {
+    async function fetchData() {
       try {
         const res = await fetch('/api/admin/content');
         if (!res.ok) throw new Error('Failed to fetch');
         const items = await res.json();
-        const contactsItem = items.find((item: any) => item.key === 'contacts');
-        if (contactsItem?.data) {
-          setContacts(contactsItem.data);
+        const item = items.find((i: any) => i.key === 'terms');
+        if (item?.data) {
+          setData(item.data);
         } else {
-          setContacts({
-            phone: '+38 098 0751707',
-            email: 'komarnytskiy.yura@gmail.com',
-            address: '82400, м. Стрий, вул. Народна, 8',
+          setData({
+            title: 'Умови використання',
+            text: '## 1. Загальні положення\n\nЦі Умови використання регулюють відносини між компанією «3D-друк» та користувачами сайту.'
           });
         }
       } catch (err) {
-        console.error('Помилка завантаження контактів:', err);
-        setContacts({
-          phone: '+38 098 0751707',
-          email: 'komarnytskiy.yura@gmail.com',
-          address: '82400, м. Стрий, вул. Народна, 8',
-        });
+        console.error('Помилка завантаження:', err);
+      } finally {
+        setLoading(false);
       }
     }
-    fetchContacts();
+    fetchData();
   }, []);
+
+  // Та сама функція форматування
+  const formatText = (text: string) => {
+    if (!text) return '';
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith('## ')) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += `<h2 class="text-2xl font-heading font-semibold text-[#1a3c34] mt-8 mb-3">${trimmed.slice(3)}</h2>`;
+        continue;
+      }
+
+      if (trimmed.startsWith('### ')) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += `<h3 class="text-xl font-heading font-semibold text-[#1a3c34] mt-6 mb-2">${trimmed.slice(4)}</h3>`;
+        continue;
+      }
+
+      if (trimmed.startsWith('- ')) {
+        if (!inList) { html += '<ul class="list-disc pl-6 space-y-1 my-2">'; inList = true; }
+        html += `<li class="text-gray-600">${trimmed.slice(2)}</li>`;
+        continue;
+      }
+
+      if (inList && trimmed !== '') {
+        html += '</ul>';
+        inList = false;
+      }
+
+      if (trimmed === '') continue;
+
+      html += `<p class="text-gray-600 leading-relaxed mb-4">${trimmed}</p>`;
+    }
+
+    if (inList) html += '</ul>';
+    return html;
+  };
+
+  if (loading) return <div className="pt-32 pb-20 container-custom text-center">Завантаження...</div>;
 
   return (
     <div className="pt-32 pb-20 container-custom max-w-3xl mx-auto">
-      <h1 className="text-4xl font-heading font-bold text-[#1a3c34] mb-6">Умови використання</h1>
-      <div className="prose prose-lg text-gray-600 space-y-4">
-        <p><strong>Останнє оновлення:</strong> 1 липня 2026 року</p>
-
-        <p>Ласкаво просимо на сайт «3D-друк»! Використовуючи наш сайт та послуги, ви погоджуєтесь з наведеними нижче умовами. Будь ласка, уважно їх прочитайте.</p>
-
-        <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">1. Загальні положення</h2>
-        <p>Цей сайт належить компанії «3D-друк». Ми надаємо послуги 3D-друку, моделювання, постобробки та консультацій. Використання сайту означає вашу повну згоду з цими Умовами.</p>
-
-        <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">2. Використання сайту</h2>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Ви зобов'язуєтеся використовувати сайт лише в законних цілях.</li>
-          <li>Забороняється розміщувати шкідливий контент, спам або порушувати роботу сайту.</li>
-          <li>Ми залишаємо за собою право змінювати або припиняти роботу сайту в будь-який час без попередження.</li>
-        </ul>
-
-        <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">3. Замовлення та оплата</h2>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Вартість друку розраховується індивідуально відповідно до моделі, матеріалу та складності.</li>
-          <li>Орієнтовні ціни вказані на сайті, але остаточна вартість узгоджується після отримання моделі.</li>
-          <li>Оплата здійснюється за реквізитами, які ми надсилаємо після узгодження замовлення.</li>
-          <li>Терміни друку залежать від складності та завантаженості – від 1 до 5 робочих днів.</li>
-        </ul>
-
-        <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">4. Доставка</h2>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Доставляємо Новою Поштою (1-3 дні), Укрпоштою (2-5 днів) або самовивіз з нашого офісу у Стрию.</li>
-          <li>Вартість доставки згідно з тарифами перевізника.</li>
-          <li>Ми не несемо відповідальності за затримки, спричинені роботою поштових служб.</li>
-        </ul>
-
-        <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">5. Гарантія та відповідальність</h2>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Ми гарантуємо якість друку – при виявленні браку замінюємо виріб безкоштовно.</li>
-          <li>Ми не несемо відповідальності за використання надрукованих виробів, якщо вони не відповідають вашим очікуванням або призначенню.</li>
-          <li>Ми не відповідаємо за збитки, спричинені неналежним використанням наших послуг.</li>
-        </ul>
-
-        <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">6. Зміни умов</h2>
-        <p>Ми залишаємо за собою право змінювати ці Умови в будь-який час. Зміни набувають чинності з моменту публікації на сайті. Рекомендуємо періодично переглядати цю сторінку.</p>
-
-        <h2 className="text-2xl font-heading font-semibold text-[#1a3c34] mt-6">7. Контакти</h2>
-        <p>
-          З усіх питань звертайтеся до нас за адресою:{' '}
-          <a href={`mailto:${contacts?.email || 'komarnytskiy.yura@gmail.com'}`} className="text-[#c9a84c] hover:underline">
-            {contacts?.email || 'komarnytskiy.yura@gmail.com'}
-          </a>
-          {' '}або за телефоном{' '}
-          <a href={`tel:${contacts?.phone?.replace(/\s/g, '') || '+380980751707'}`} className="text-[#c9a84c] hover:underline">
-            {contacts?.phone || '+38 098 0751707'}
-          </a>
-          .
-        </p>
-        {contacts?.address && (
-          <p>Наша адреса: {contacts.address}</p>
-        )}
-      </div>
+      <h1 className="text-4xl font-heading font-bold text-[#1a3c34] mb-6">{data.title}</h1>
+      <div
+        className="prose prose-lg text-gray-600 max-w-none"
+        dangerouslySetInnerHTML={{ __html: formatText(data.text) }}
+      />
     </div>
   );
 }

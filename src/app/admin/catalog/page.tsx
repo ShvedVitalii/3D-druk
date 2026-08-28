@@ -11,18 +11,19 @@ type Category = {
   slug: string;
   image: string;
   description: string;
+  order: number;
 };
 
 type Product = {
   id: string;
   categoryId: string;
-  // інші поля не потрібні
 };
 
 export default function AdminCatalog() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -33,7 +34,12 @@ export default function AdminCatalog() {
     try {
       const res = await fetch('/api/admin/catalog');
       const data = await res.json();
-      setCategories(data.categories || []);
+      // Переконуємося, що всі категорії мають поле order
+      const cats = (data.categories || []).map((c: any) => ({
+        ...c,
+        order: c.order !== undefined ? c.order : 0,
+      }));
+      setCategories(cats);
       setProducts(data.products || []);
     } catch (err) {
       console.error('Помилка завантаження категорій:', err);
@@ -64,32 +70,94 @@ export default function AdminCatalog() {
     }
   };
 
+  // Функція для оновлення порядку категорій
+  const updateCategoryOrder = async (id: string, newOrder: number) => {
+    if (isNaN(newOrder) || newOrder < 1) {
+      alert('Порядок має бути числом більше 0');
+      return;
+    }
+
+    // Оновлюємо локальний стан
+    let updatedCategories = categories.map(c => 
+      c.id === id ? { ...c, order: newOrder } : c
+    );
+
+    // Сортуємо за порядком і перенумеровуємо послідовно
+    updatedCategories.sort((a, b) => (a.order || 0) - (b.order || 0));
+    updatedCategories = updatedCategories.map((c, index) => ({
+      ...c,
+      order: index + 1,
+    }));
+
+    setCategories(updatedCategories);
+    setSaving(true);
+
+    try {
+      // Отримуємо поточні товари (вони не змінюються)
+      const res = await fetch('/api/admin/catalog');
+      const data = await res.json();
+      
+      await fetch('/api/admin/catalog', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          categories: updatedCategories, 
+          products: data.products || [] 
+        }),
+      });
+      
+      router.refresh();
+    } catch (err) {
+      alert('Помилка збереження порядку');
+      // Відновлюємо старі дані
+      fetchData();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return <div className="text-center py-10">Завантаження...</div>;
 
-  // Підрахунок кількості товарів у кожній категорії
   const getProductCount = (categoryId: string) => {
     return products.filter((p) => p.categoryId === categoryId).length;
   };
+
+  // Сортуємо категорії для відображення
+  const sortedCategories = [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-[#1a3c34]">Категорії каталогу</h1>
-        <Link
-          href="/admin/catalog/new"
-          className="px-4 py-2 bg-[#1a3c34] text-white rounded-lg hover:bg-[#2d5a4b] transition"
-        >
-          + Додати категорію
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/admin/catalog/new"
+            className="px-4 py-2 bg-[#1a3c34] text-white rounded-lg hover:bg-[#2d5a4b] transition"
+          >
+            + Додати категорію
+          </Link>
+          <Link
+            href="/admin/content/external-links"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            🌐 Більше моделей
+          </Link>
+        </div>
       </div>
 
-      {categories.length === 0 ? (
+      {saving && (
+        <div className="mb-4 p-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
+          Збереження...
+        </div>
+      )}
+
+      {sortedCategories.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
           <p className="text-gray-400">Категорій поки немає. Створіть першу!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((cat) => {
+          {sortedCategories.map((cat) => {
             const count = getProductCount(cat.id);
             return (
               <div key={cat.id} className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden hover:shadow-lg transition">
@@ -101,7 +169,25 @@ export default function AdminCatalog() {
                   )}
                 </div>
                 <div className="p-4">
-                  <h3 className="text-xl font-bold text-[#1a3c34]">{cat.name}</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-[#1a3c34]">{cat.name}</h3>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-400">Порядок:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={cat.order || 0}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val) && val > 0) {
+                            updateCategoryOrder(cat.id, val);
+                          }
+                        }}
+                        className="w-12 p-1 text-center text-sm border border-gray-300 rounded focus:border-[#c9a84c] outline-none"
+                        disabled={saving}
+                      />
+                    </div>
+                  </div>
                   <p className="text-sm text-gray-500 mt-1 line-clamp-2">{cat.description}</p>
                   <p className="text-xs text-gray-400 mt-1">Слаг: {cat.slug}</p>
                   <div className="flex flex-wrap gap-2 mt-4">

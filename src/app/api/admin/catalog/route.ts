@@ -36,9 +36,20 @@ export async function PUT(req: Request) {
 
     const existing = existingData?.data || { categories: [], products: [] };
 
+    // Переконуємося, що всі категорії та товари мають поле order
+    const processedCategories = (categories ?? existing.categories).map((c: any) => ({
+      ...c,
+      order: c.order !== undefined ? c.order : 0,
+    }));
+
+    const processedProducts = (products ?? existing.products).map((p: any) => ({
+      ...p,
+      order: p.order !== undefined ? p.order : 0,
+    }));
+
     const newData = {
-      categories: categories ?? existing.categories,
-      products: products ?? existing.products,
+      categories: processedCategories,
+      products: processedProducts,
     };
 
     const { error } = await supabaseAdmin

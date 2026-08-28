@@ -5,6 +5,8 @@ import Materials from '@/components/home/Materials';
 import Process from '@/components/home/Process';
 import Pricing from '@/components/home/Pricing';
 import GalleryPreview from '@/components/home/GalleryPreview';
+import Clients from '@/components/home/Clients';
+import Partners from '@/components/home/Partners';
 import Testimonials from '@/components/home/Testimonials';
 import FAQ from '@/components/home/FAQ';
 import Contact from '@/components/home/Contact';
@@ -43,6 +45,11 @@ export default async function Home() {
       <Process data={content.process} />
       <Pricing data={content.pricing} />
       <GalleryPreview data={content.gallery} />
+      
+      {/* === НАШІ ЗАМОВНИКИ ТА ПАРТНЕРИ === */}
+      <Clients />
+      <Partners />
+      
       <Testimonials data={content.testimonials} />
       <FAQ data={content.faq} />
       <Contact data={content.contacts} />

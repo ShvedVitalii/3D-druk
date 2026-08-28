@@ -17,7 +17,6 @@ export default function Footer() {
         setContacts(contactsItem?.data || null);
       } catch (err) {
         console.error('Помилка завантаження контактів у футері:', err);
-        // Якщо помилка – використовуємо дефолтні контакти
         setContacts(null);
       } finally {
         setLoading(false);
@@ -26,9 +25,8 @@ export default function Footer() {
     fetchContacts();
   }, []);
 
-  // Дефолтні контакти (якщо ще не завантажилися або сталася помилка)
   const c = contacts || {
-    phone: '+380 98 075 17 07',
+    phone: '+38 098 0751707',
     email: 'komarnytskiy.yura@gmail.com',
     address: '82400, м. Стрий, вул. Народна, 8',
     workHours: 'Пн–Пт 9:00–18:00',
@@ -39,7 +37,6 @@ export default function Footer() {
     ],
   };
 
-  // Забезпечуємо наявність socialLinks
   let socialLinks = c.socialLinks;
   if (!socialLinks || !Array.isArray(socialLinks) || socialLinks.length === 0) {
     socialLinks = [];
@@ -48,16 +45,9 @@ export default function Footer() {
     if (c.instagram) socialLinks.push({ name: 'Instagram', url: c.instagram, icon: 'Instagram' });
   }
 
-  const getIconSrc = (iconName: string) => {
-    const localPath = `/images/icons/${iconName}.svg`;
-    const cdnUrl = `https://cdn.simpleicons.org/${iconName.toLowerCase()}`;
-    return localPath;
-  };
-
   return (
     <footer className="bg-[#1a3c34] border-t border-[#c9a84c]/20 py-16 text-white">
       <div className="container-custom grid grid-cols-1 md:grid-cols-4 gap-10">
-        {/* Бренд */}
         <div>
           <Link href="/" className="text-2xl font-serif font-bold text-[#c9a84c] hover:text-[#b89a3e] transition">
             3D-друк
@@ -68,7 +58,6 @@ export default function Footer() {
           <p className="text-gray-400 text-xs mt-4">© 2026 — Всі права захищені.</p>
         </div>
 
-        {/* Навігація */}
         <div>
           <h4 className="font-bold text-[#c9a84c] mb-3">Навігація</h4>
           <ul className="space-y-2 text-sm">
@@ -80,7 +69,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Корисне */}
         <div>
           <h4 className="font-bold text-[#c9a84c] mb-3">Корисне</h4>
           <ul className="space-y-2 text-sm">
@@ -88,10 +76,10 @@ export default function Footer() {
             <li><Link href="/privacy" className="text-gray-300 hover:text-[#7ec8a3] transition">Політика конфіденційності</Link></li>
             <li><Link href="/terms" className="text-gray-300 hover:text-[#7ec8a3] transition">Умови використання</Link></li>
             <li><Link href="/#pricing" className="text-gray-300 hover:text-[#7ec8a3] transition">Доставка та оплата</Link></li>
+            <li><Link href="/about-3d" className="text-gray-300 hover:text-[#7ec8a3] transition">Все про 3D-друк</Link></li>
           </ul>
         </div>
 
-        {/* Контакти */}
         <div>
           <h4 className="font-bold text-[#c9a84c] mb-3">Контакти</h4>
           <ul className="space-y-3 text-sm text-gray-300">
@@ -130,7 +118,6 @@ export default function Footer() {
             </li>
           </ul>
 
-          {/* Соціальні мережі з SVG логотипами */}
           {socialLinks.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-[#c9a84c]/20 pt-4">
               {socialLinks.map((link: any, idx: number) => {

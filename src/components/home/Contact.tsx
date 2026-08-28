@@ -1,21 +1,58 @@
 'use client';
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
-import Button from '@/components/ui/Button';
+import { useRef, useState, useEffect } from 'react';
+
+// Дефолтні значення – використовуються, якщо дані з API відсутні
+const DEFAULT_CONTACTS = {
+  phone: '+38 098 0751707',
+  email: '3ddrukstriy@gmail.com',
+  address: '82400, Львівська обл., м. Стрий, вул. Народна, 8',
+  workHours: 'Пн–Пт 9:00–18:00',
+  socialLinks: [
+    { name: 'Telegram', url: 'https://t.me/3d_print', icon: 'Telegram' },
+    { name: 'WhatsApp', url: 'https://wa.me/380980751707', icon: 'WhatsApp' },
+    { name: 'Instagram', url: 'https://instagram.com/3d_print_ua', icon: 'Instagram' },
+  ],
+};
 
 export default function Contact({ data }: { data?: any }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
+  const [contacts, setContacts] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Дефолтні дані
-  const contactData = data || {
-    phone: '+38 098 0751707',
-    email: 'komarnytskiy.yura@gmail.com',
-    address: '82400, Львівська обл., м. Стрий, вул. Народна, 8',
-    telegram: 'https://t.me/3d_print',
-    whatsapp: 'https://wa.me/380980751707',
-    instagram: 'https://instagram.com/3d_print_ua',
-  };
+  useEffect(() => {
+    // Якщо дані передані з батьківського компонента (з page.tsx) – використовуємо їх
+    if (data) {
+      setContacts(data);
+      setLoading(false);
+      return;
+    }
+
+    // Інакше – завантажуємо з API
+    async function fetchContacts() {
+      try {
+        const res = await fetch('/api/admin/content');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const items = await res.json();
+        const contactsItem = items.find((item: any) => item.key === 'contacts');
+        if (contactsItem?.data) {
+          setContacts(contactsItem.data);
+        } else {
+          setContacts(DEFAULT_CONTACTS);
+        }
+      } catch (err) {
+        console.error('Помилка завантаження контактів:', err);
+        setContacts(DEFAULT_CONTACTS);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchContacts();
+  }, [data]);
+
+  // Поки дані завантажуються – показуємо блок з дефолтними значеннями (щоб не зникав)
+  const contactData = contacts || DEFAULT_CONTACTS;
 
   return (
     <section ref={ref} className="py-20 bg-white">
@@ -24,7 +61,7 @@ export default function Contact({ data }: { data?: any }) {
           initial={{ opacity: 0, x: -30 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
         >
-          <h2 className="text-[#1a3c34]">Наші контакти</h2>
+          <h2 className="text-4xl md:text-5xl font-heading font-bold text-[#1a3c34]">Наші контакти</h2>
           <p className="text-[#5a5a5a] text-lg mb-6">Завжди на зв'язку</p>
           <ul className="space-y-4 text-gray-700">
             <li className="flex items-center gap-3">
@@ -54,14 +91,47 @@ export default function Contact({ data }: { data?: any }) {
               <svg className="w-6 h-6 text-[#c9a84c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Пн–Пт 9:00–18:00</span>
+              <span>{contactData.workHours || 'Пн–Пт 9:00–18:00'}</span>
             </li>
           </ul>
-          <div className="mt-8 flex gap-4">
-            <Button href={contactData.telegram || 'https://t.me/3d_print'} variant="primary">Telegram</Button>
-            <Button href={contactData.whatsapp || 'https://wa.me/380980751707'} variant="secondary" className="border-[#1a3c34] text-[#1a3c34] hover:bg-[#1a3c34]/10">
-              WhatsApp
-            </Button>
+          <div className="mt-8 flex flex-wrap gap-4">
+            {contactData.socialLinks && contactData.socialLinks.map((link: any, idx: number) => {
+              const iconName = link.icon || link.name;
+              const localSrc = `/images/icons/${iconName}.svg`;
+              const cdnFallback = `https://cdn.simpleicons.org/${iconName.toLowerCase()}`;
+              return (
+                <a
+                  key={idx}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full border border-gray-200 hover:border-[#c9a84c] hover:bg-[#f5f0eb] transition-all"
+                >
+                  <img
+                    src={localSrc}
+                    alt={link.name}
+                    className="w-5 h-5"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      if (!img.dataset.fallback) {
+                        img.dataset.fallback = 'true';
+                        img.src = cdnFallback;
+                      } else {
+                        img.style.display = 'none';
+                        const parent = img.parentNode;
+                        if (parent) {
+                          const span = document.createElement('span');
+                          span.className = 'text-lg';
+                          span.textContent = '🔗';
+                          parent.prepend(span);
+                        }
+                      }
+                    }}
+                  />
+                  <span className="text-sm font-medium text-gray-700">{link.name}</span>
+                </a>
+              );
+            })}
           </div>
         </motion.div>
 

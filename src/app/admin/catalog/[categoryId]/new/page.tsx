@@ -27,6 +27,7 @@ export default function NewProduct() {
     dimensions: '',
     weight: '',
     maxQuantity: undefined as number | undefined,
+    order: 0,
   });
   const [specs, setSpecs] = useState<Spec[]>([{ label: '', value: '' }]);
 
@@ -158,6 +159,7 @@ export default function NewProduct() {
         inStock: form.inStock,
         hidden: form.hidden,
         maxQuantity: form.maxQuantity,
+        order: form.order || 0,
         createdAt: new Date().toISOString(),
       };
       const newProducts = [...(data.products || []), newProduct];
@@ -200,6 +202,19 @@ export default function NewProduct() {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Порядок сортування</label>
+            <input
+              type="number"
+              value={form.order}
+              onChange={(e) => handleChange('order', Number(e.target.value))}
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              placeholder="0"
+              min="0"
+            />
+            <p className="text-xs text-gray-400 mt-1">Чим менше число, тим вище товар у списку</p>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Ціна (грн) *</label>
@@ -208,7 +223,9 @@ export default function NewProduct() {
                 value={form.price}
                 onChange={(e) => handlePriceChange('price', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
-                min="0" step="1" required
+                min="0"
+                step="1"
+                required
               />
             </div>
             <div>
@@ -218,7 +235,8 @@ export default function NewProduct() {
                 value={form.oldPrice}
                 onChange={(e) => handlePriceChange('oldPrice', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
-                min="0" step="1"
+                min="0"
+                step="1"
               />
             </div>
             <div>
@@ -228,7 +246,8 @@ export default function NewProduct() {
                 value={form.discount}
                 onChange={(e) => handlePriceChange('discount', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
-                min="0" max="100"
+                min="0"
+                max="100"
               />
             </div>
           </div>

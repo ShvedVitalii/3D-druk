@@ -11,9 +11,14 @@ const navItems = [
   { href: '/admin/services', label: 'Послуги', icon: '🖨️' },
   { href: '/admin/printers', label: 'Принтери', icon: '🖥️' },
   { href: '/admin/catalog', label: 'Каталог', icon: '📦' },
-  { href: '/admin/contacts', label: 'Контакти', icon: '📞' },
+  { href: '/admin/contacts', label: 'Контакти (футер)', icon: '📞' },
   { href: '/admin/payment', label: 'Оплата', icon: '💳' },
   { href: '/admin/orders', label: 'Заявки', icon: '📋' },
+  // Група "Футер" – додаємо всі сторінки
+  { type: 'group', label: 'Футер', icon: '📋' },
+  { href: '/admin/content/privacy', label: 'Політика конфіденційності', icon: '📜' },
+  { href: '/admin/content/terms', label: 'Умови використання', icon: '⚖️' },
+  { href: '/admin/content/about-3d', label: 'Все про 3D-друк', icon: '📖' },
 ];
 
 export default function Sidebar() {
@@ -31,6 +36,33 @@ export default function Sidebar() {
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
+  const renderNavItem = (item: any, index: number) => {
+    if (item.type === 'group') {
+      return (
+        <div key={index} className="px-4 py-2 mt-4 text-xs font-semibold text-white/40 uppercase tracking-wider border-t border-white/10 pt-4">
+          {item.icon} {item.label}
+        </div>
+      );
+    }
+
+    const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+          isActive
+            ? 'bg-[#c9a84c] text-[#1a3c34] font-semibold shadow-lg'
+            : 'hover:bg-white/10 text-white/80 hover:text-white'
+        }`}
+      >
+        <span className="text-xl">{item.icon}</span>
+        <span>{item.label}</span>
+      </Link>
+    );
+  };
+
+  // Десктопна версія
   if (!isMobile) {
     return (
       <aside className="w-64 bg-[#1a3c34] text-white min-h-screen flex flex-col fixed left-0 top-0 z-50">
@@ -39,29 +71,8 @@ export default function Sidebar() {
           <p className="text-xs text-white/60 mt-1">Адмін-панель</p>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? 'bg-[#c9a84c] text-[#1a3c34] font-semibold shadow-lg'
-                    : 'hover:bg-white/10 text-white/80 hover:text-white'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span>{item.label}</span>
-                {item.label === 'Заявки' && (
-                  <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">
-                    NEW
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          {navItems.map((item, idx) => renderNavItem(item, idx))}
         </nav>
 
         <div className="p-4 border-t border-white/10">
@@ -116,28 +127,7 @@ export default function Sidebar() {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? 'bg-[#c9a84c] text-[#1a3c34] font-semibold shadow-lg'
-                    : 'hover:bg-white/10 text-white/80 hover:text-white'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span>{item.label}</span>
-                {item.label === 'Заявки' && (
-                  <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">
-                    NEW
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {navItems.map((item, idx) => renderNavItem(item, idx))}
         </nav>
 
         <div className="p-4 border-t border-white/10">

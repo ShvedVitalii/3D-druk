@@ -11,6 +11,7 @@ type Category = {
   slug: string;
   image: string;
   description: string;
+  order: number;
 };
 
 export default function EditCategory() {
@@ -43,7 +44,6 @@ export default function EditCategory() {
     if (!category) return;
     const value = e.target.value;
     const newSlug = generateSlug(value);
-    // Оновлюємо slug, якщо він не змінювався вручну (дорівнює старому значенню)
     setCategory({
       ...category,
       name: value,
@@ -132,6 +132,18 @@ export default function EditCategory() {
               className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
             />
             <p className="text-xs text-gray-400 mt-1">Автоматично генерується з назви (транслітерація)</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Порядок сортування</label>
+            <input
+              type="number"
+              value={category.order || 0}
+              onChange={(e) => setCategory({ ...category, order: Number(e.target.value) })}
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              min="0"
+            />
+            <p className="text-xs text-gray-400 mt-1">Чим менше число, тим вище категорія в списку</p>
           </div>
 
           <div>

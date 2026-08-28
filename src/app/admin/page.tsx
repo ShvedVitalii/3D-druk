@@ -15,14 +15,21 @@ const blockNames: Record<string, string> = {
   finalCTA: 'Готові втілити ідею?',
   gallery: 'Наші роботи',
   custom_models: '✨ Розробка авторських моделей',
+  external_links: '🌐 Більше моделей (зовнішні посилання)',
+  clients: '👥 Наші замовники',
+  partners: '🤝 Наші партнери',
+  about_3d: '📖 Все про 3D-друк',
 };
 
-// Мапа кастомних редакторів для блоків зі складною структурою
 const customEditors: Record<string, string> = {
   pricing: '/admin/content/pricing',
   gallery: '/admin/content/gallery',
   custom_models: '/admin/content/custom-models',
   hero: '/admin/content/hero',
+  external_links: '/admin/content/external-links',
+  clients: '/admin/content/clients',
+  partners: '/admin/content/partners',
+  about_3d: '/admin/content/about-3d',
 };
 
 export default function AdminPage() {
@@ -52,54 +59,9 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/content');
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
-      // Виключаємо зайві ключі, які не потрібно показувати на головній адмінці
-      const excludeKeys = ['services', 'printers', 'contacts', 'catalog', 'payment_details'];
-      let filtered = data.filter((item: any) => !excludeKeys.includes(item.key));
-
-      // Примусово додаємо hero та custom_models, якщо їх немає
-      const requiredKeys = ['hero', 'custom_models'];
-      const existingKeys = filtered.map((item: any) => item.key);
-      for (const key of requiredKeys) {
-        if (!existingKeys.includes(key)) {
-          filtered.push({
-            key: key,
-            data: key === 'hero' 
-              ? {
-                  title: 'Ваші ідеї у 3D',
-                  subtitle: 'Професійний 3D-друк на замовлення. Швидко, якісно, доступно. Допомагаємо ЗСУ – друкуємо адаптери, кріплення та тактичні аксесуари.',
-                  buttonText: 'Замовити друк',
-                  heroImage: '/images/printer/x1carbon.jpg',
-                }
-              : [
-                  {
-                    id: '1',
-                    title: 'Біонічний протез руки',
-                    description: 'Функціональний протез з адаптивним захватом.',
-                    image: '/images/gallery/7.jpg',
-                    category: 'Протези',
-                    tags: ['AMS-друк', 'TPU', 'Точність 0.05 мм'],
-                  },
-                  {
-                    id: '2',
-                    title: 'Коробка передач (прототип)',
-                    description: 'Тестовий зразок складної механічної системи.',
-                    image: '/images/gallery/4.jpg',
-                    category: 'Механізми',
-                    tags: ['ABS', 'Шліфування'],
-                  },
-                  {
-                    id: '3',
-                    title: 'Фігурка Телелан',
-                    description: 'Авторська модель з деталізацією до 0.1 мм.',
-                    image: '/images/gallery/18.jpg',
-                    category: 'Арт-фігурки',
-                    tags: ['PLA', 'Багатоколірний AMS'],
-                  },
-                ]
-          });
-        }
-      }
-
+      // Виключаємо privacy та terms – вони тепер у бічній панелі
+      const excludeKeys = ['services', 'printers', 'contacts', 'catalog', 'payment_details', 'privacy', 'terms'];
+      const filtered = data.filter((item: any) => !excludeKeys.includes(item.key));
       setBlocks(filtered);
     } catch (err) {
       console.error('Помилка завантаження блоків:', err);

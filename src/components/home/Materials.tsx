@@ -112,7 +112,7 @@ export default function Materials({ data }: { data?: any[] }) {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           className="text-center max-w-2xl mx-auto mb-12"
         >
-          <h2 className="text-[#1a3c34]">Матеріали</h2>
+          <h2 className="text-4xl md:text-5xl font-heading font-bold text-[#1a3c34]">Матеріали</h2>
           <p className="text-gray-600 text-lg">
             Натисніть на картку, щоб дізнатися більше
           </p>

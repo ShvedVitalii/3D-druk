@@ -11,6 +11,7 @@ export default function NewCategory() {
   const [slug, setSlug] = useState('');
   const [image, setImage] = useState('');
   const [description, setDescription] = useState('');
+  const [order, setOrder] = useState(0);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -60,6 +61,7 @@ export default function NewCategory() {
         slug: slug.trim() || generateSlug(name),
         image: image.trim() || '',
         description: description.trim() || '',
+        order: order || 0,
       };
 
       const newCategories = [...(data.categories || []), newCategory];
@@ -113,6 +115,19 @@ export default function NewCategory() {
               placeholder="igrashky"
             />
             <p className="text-xs text-gray-400 mt-1">Автоматично генерується з назви (транслітерація)</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Порядок сортування</label>
+            <input
+              type="number"
+              value={order}
+              onChange={(e) => setOrder(Number(e.target.value))}
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              placeholder="0"
+              min="0"
+            />
+            <p className="text-xs text-gray-400 mt-1">Чим менше число, тим вище категорія в списку</p>
           </div>
 
           <div>

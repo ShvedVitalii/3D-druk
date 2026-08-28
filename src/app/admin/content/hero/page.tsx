@@ -16,7 +16,9 @@ export default function EditHero() {
     subtitle:
       'Професійний 3D-друк на замовлення. Швидко, якісно, доступно. Допомагаємо ЗСУ – друкуємо адаптери, кріплення та тактичні аксесуари.',
     buttonText: 'Замовити друк',
-    heroImage: '/images/printer/x1carbon.jpg',
+    heroVideo: '',
+    donationButtonText: 'Донат',
+    donationLink: 'https://send.monobank.ua/jar/4XgUntFv2W',
   });
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function EditHero() {
     setData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleImageUpload = async (file: File | null) => {
+  const handleVideoUpload = async (file: File | null) => {
     if (!file) return;
     setUploading(true);
     try {
@@ -56,20 +58,17 @@ export default function EditHero() {
       });
       const result = await res.json();
       if (result.fileUrl) {
-        setData((prev) => ({ ...prev, heroImage: result.fileUrl }));
+        setData((prev) => ({ ...prev, heroVideo: result.fileUrl }));
       }
     } catch (err) {
-      alert('Помилка завантаження фото');
+      alert('Помилка завантаження відео');
     } finally {
       setUploading(false);
     }
   };
 
-  // Нова функція для видалення фото
-  const handleRemoveImage = () => {
-    if (confirm('Ви впевнені, що хочете видалити фото банера?')) {
-      setData((prev) => ({ ...prev, heroImage: '' }));
-    }
+  const removeVideo = () => {
+    setData((prev) => ({ ...prev, heroVideo: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,7 +128,7 @@ export default function EditHero() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Текст кнопки</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Текст кнопки "Замовити"</label>
             <input
               type="text"
               value={data.buttonText}
@@ -138,35 +137,61 @@ export default function EditHero() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Фото на банері</label>
-            {data.heroImage ? (
-              <div className="mb-3 flex items-start gap-4">
-                <div className="relative w-40 h-40 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                  <img src={data.heroImage} alt="Банер" className="w-full h-full object-cover" />
-                </div>
+          {/* === КНОПКА ДОНАТУ === */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="text-lg font-bold text-[#1a3c34] mb-3">❤️ Кнопка Донат</h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Текст кнопки</label>
+              <input
+                type="text"
+                value={data.donationButtonText || 'Донат'}
+                onChange={(e) => handleChange('donationButtonText', e.target.value)}
+                className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              />
+            </div>
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Посилання для донату</label>
+              <input
+                type="url"
+                value={data.donationLink || ''}
+                onChange={(e) => handleChange('donationLink', e.target.value)}
+                placeholder="https://send.monobank.ua/jar/..."
+                className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              />
+            </div>
+          </div>
+
+          {/* === ВІДЕО === */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="text-lg font-bold text-[#1a3c34] mb-3">🎬 Відео для фону</h3>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3 text-sm text-blue-800">
+              💡 Завантажте відео, яке буде фоном у банері. Рекомендований формат: MP4, розмір не більше 50 МБ.
+              Якщо відео не завантажено, буде використано градієнтний фон.
+            </div>
+            {data.heroVideo && (
+              <div className="mb-3">
+                <video
+                  src={data.heroVideo}
+                  className="w-full max-h-64 object-cover rounded-lg border border-gray-200"
+                  controls
+                />
                 <button
                   type="button"
-                  onClick={handleRemoveImage}
-                  className="mt-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-medium"
+                  onClick={removeVideo}
+                  className="mt-2 text-red-500 hover:text-red-700 text-sm font-medium"
                 >
-                  🗑️ Видалити фото
+                  ✕ Видалити відео
                 </button>
-              </div>
-            ) : (
-              <div className="mb-3 p-4 bg-gray-100 rounded-lg border border-dashed border-gray-300 text-center text-gray-400">
-                Фото не завантажено
               </div>
             )}
             <FileUpload
-              onFileSelect={handleImageUpload}
-              accept=".jpg,.jpeg,.png,.webp,.svg"
-              allowedExtensions={['jpg', 'jpeg', 'png', 'webp', 'svg']}
-              maxSize={5 * 1024 * 1024}
-              label={data.heroImage ? 'Замінити фото' : 'Завантажити фото'}
+              onFileSelect={handleVideoUpload}
+              accept=".mp4,.webm,.mov"
+              allowedExtensions={['mp4', 'webm', 'mov']}
+              maxSize={50 * 1024 * 1024}
+              label={data.heroVideo ? 'Замінити відео' : 'Завантажити відео'}
             />
             {uploading && <p className="text-sm text-blue-500 mt-1">Завантаження...</p>}
-            {data.heroImage && <p className="text-sm text-green-600 mt-1">✅ Фото завантажено</p>}
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}

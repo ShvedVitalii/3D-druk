@@ -19,6 +19,7 @@ type Product = {
   inStock: boolean;
   hidden: boolean;
   maxQuantity?: number;
+  order: number;
 };
 
 export default function EditProduct() {
@@ -43,7 +44,12 @@ export default function EditProduct() {
       const cat = data.categories?.find((c: any) => c.id === categoryId);
       if (cat) setCategoryName(cat.name);
       const found = data.products?.find((p: any) => p.id === productId);
-      if (found) setProduct(found);
+      if (found) {
+        setProduct({
+          ...found,
+          order: found.order || 0,
+        });
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -175,6 +181,18 @@ export default function EditProduct() {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Порядок сортування</label>
+            <input
+              type="number"
+              value={product.order || 0}
+              onChange={(e) => handleChange('order', Number(e.target.value))}
+              className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
+              min="0"
+            />
+            <p className="text-xs text-gray-400 mt-1">Чим менше число, тим вище товар у списку</p>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Ціна *</label>
@@ -183,7 +201,9 @@ export default function EditProduct() {
                 value={product.price}
                 onChange={(e) => handlePriceChange('price', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
-                min="0" step="1" required
+                min="0"
+                step="1"
+                required
               />
             </div>
             <div>
@@ -193,7 +213,8 @@ export default function EditProduct() {
                 value={product.oldPrice}
                 onChange={(e) => handlePriceChange('oldPrice', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
-                min="0" step="1"
+                min="0"
+                step="1"
               />
             </div>
             <div>
@@ -203,7 +224,8 @@ export default function EditProduct() {
                 value={product.discount}
                 onChange={(e) => handlePriceChange('discount', parseFloat(e.target.value) || 0)}
                 className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/30 outline-none transition"
-                min="0" max="100"
+                min="0"
+                max="100"
               />
             </div>
           </div>

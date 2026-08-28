@@ -1,16 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+type ExternalLink = {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
+};
 
 export default function ClientGallery() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [links, setLinks] = useState<ExternalLink[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const sites = [
-    { name: 'Printables.com', url: 'https://www.printables.com/model', icon: '🖨️' },
-    { name: 'Thingiverse', url: 'https://www.thingiverse.com/', icon: '🌐' },
-    { name: 'Cults3D', url: 'https://cults3d.com/', icon: '🎨' },
-  ];
+  useEffect(() => {
+    async function fetchLinks() {
+      try {
+        const res = await fetch('/api/admin/content');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const items = await res.json();
+        const linkItem = items.find((item: any) => item.key === 'external_links');
+        if (linkItem?.data && Array.isArray(linkItem.data) && linkItem.data.length > 0) {
+          setLinks(linkItem.data);
+        } else {
+          setLinks([
+            { id: '1', name: 'Printables.com', url: 'https://www.printables.com/model', icon: '🖨️' },
+            { id: '2', name: 'Thingiverse', url: 'https://www.thingiverse.com/', icon: '🌐' },
+            { id: '3', name: 'Cults3D', url: 'https://cults3d.com/', icon: '🎨' },
+          ]);
+        }
+      } catch (err) {
+        console.error('Помилка завантаження зовнішніх посилань:', err);
+        setLinks([
+          { id: '1', name: 'Printables.com', url: 'https://www.printables.com/model', icon: '🖨️' },
+          { id: '2', name: 'Thingiverse', url: 'https://www.thingiverse.com/', icon: '🌐' },
+          { id: '3', name: 'Cults3D', url: 'https://cults3d.com/', icon: '🎨' },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchLinks();
+  }, []);
+
+  if (loading) return null;
 
   return (
     <div className="text-center mt-16">
@@ -38,9 +73,9 @@ export default function ClientGallery() {
             className="overflow-hidden"
           >
             <div className="flex flex-wrap justify-center gap-4 mt-6">
-              {sites.map((site, idx) => (
+              {links.map((site, idx) => (
                 <motion.a
-                  key={idx}
+                  key={site.id || idx}
                   href={site.url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -50,7 +85,7 @@ export default function ClientGallery() {
                   whileHover={{ scale: 1.05, y: -2 }}
                   className="flex items-center gap-3 px-6 py-3 bg-white rounded-xl shadow-md border border-gray-200 hover:border-[#c9a84c] hover:shadow-lg transition-all duration-200 text-[#1a3c34] font-medium"
                 >
-                  <span className="text-2xl">{site.icon}</span>
+                  <span className="text-2xl">{site.icon || '🔗'}</span>
                   {site.name}
                 </motion.a>
               ))}
