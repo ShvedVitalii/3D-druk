@@ -1,7 +1,6 @@
 'use client';
 
-import { supabaseAdmin } from '@/lib/supabase/server';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import GalleryAddToCart from '@/components/ui/GalleryAddToCart';
@@ -10,12 +9,15 @@ import { useEffect, useState } from 'react';
 
 const ITEMS_PER_PAGE = 9;
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
+export default function CategoryPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const router = useRouter();
+
   const [category, setCategory] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
@@ -24,14 +26,13 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
         const catalog = data || { categories: [], products: [] };
-        const cat = catalog.categories.find((c: any) => c.slug === params.slug);
+        const cat = catalog.categories.find((c: any) => c.slug === slug);
         if (!cat) {
           setLoading(false);
           router.push('/404');
           return;
         }
         setCategory(cat);
-        // Сортуємо товари за полем order
         const filtered = catalog.products
           .filter((p: any) => p.categoryId === cat.id && !p.hidden)
           .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
@@ -44,7 +45,12 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
       }
     }
     fetchData();
-  }, [params.slug, router]);
+  }, [slug, router]);
+
+  // Скидаємо сторінку при зміні slug
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [slug]);
 
   if (loading) return <div className="pt-32 pb-20 container-custom text-center">Завантаження...</div>;
   if (!category) return notFound();
@@ -54,10 +60,6 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [params.slug]);
 
   function getMainSpecs(product: any) {
     if (!product.specs || product.specs.length === 0) return null;

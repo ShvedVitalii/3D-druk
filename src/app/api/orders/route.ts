@@ -4,16 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-// ВИКОРИСТОВУЄМО onboarding@resend.dev, якщо не задано інше
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '3ddrukstriy@gmail.com';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { customer, delivery, items, total, source, payment } = body;
+    const { customer, delivery, items, total, source } = body; // видалили payment
 
+    // Валідація
     if (!customer || !delivery || !items || total === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -21,7 +20,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Збереження в Supabase
+    // Зберігаємо в Supabase – БЕЗ поля payment
     const { data, error } = await supabaseAdmin.from('orders').insert([
       {
         customer,
@@ -30,7 +29,7 @@ export async function POST(req: Request) {
         total,
         source: source || 'form',
         status: 'pending',
-        payment: payment || null,
+        // payment – видалили
       },
     ]).select();
 
@@ -47,9 +46,6 @@ export async function POST(req: Request) {
     const orderId = data?.[0]?.id || `ORDER-${Date.now()}`;
 
     // ===== ВІДПРАВКА EMAIL =====
-    let emailSent = false;
-    let emailError = null;
-
     if (process.env.RESEND_API_KEY) {
       try {
         const itemList = items.map((item: any) => 
@@ -76,14 +72,10 @@ ${itemList}
 
 Джерело: ${source === 'cart' ? '🛒 Кошик' : '📝 Форма'}
 
-${payment?.confirmed ? '✅ Оплата підтверджена' : '❌ Оплата НЕ підтверджена'}
-${payment?.number ? `Номер платежу: ${payment.number}` : ''}
-
 ---
 Переглянути: ${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin/orders
         `;
 
-        // Відправка адміну
         await resend.emails.send({
           from: FROM_EMAIL,
           to: [ADMIN_EMAIL],
@@ -91,10 +83,9 @@ ${payment?.number ? `Номер платежу: ${payment.number}` : ''}
           text: adminText,
         });
 
-        emailSent = true;
-        console.log(`✅ Email про замовлення #${orderId} надіслано на ${ADMIN_EMAIL}`);
+        console.log('✅ Email надіслано на', ADMIN_EMAIL);
 
-        // Якщо є email клієнта – надсилаємо йому підтвердження
+        // Відправка клієнту (якщо є email)
         if (customer.email) {
           const clientText = `
 Дякуємо за ваше замовлення #${orderId}!
@@ -120,21 +111,15 @@ ${itemList}
           });
         }
 
-      } catch (emailErr: any) {
+      } catch (emailErr) {
         console.error('❌ Помилка відправки email:', emailErr);
-        emailError = emailErr.message || 'Невідома помилка';
+        // Не зупиняємо виконання
       }
     } else {
       console.warn('⚠️ RESEND_API_KEY не налаштовано');
     }
 
-    // Повертаємо успіх, навіть якщо email не надіслано (замовлення збережено)
-    return NextResponse.json({
-      success: true,
-      id: orderId,
-      emailSent,
-      emailError: emailError || null,
-    });
+    return NextResponse.json({ success: true, id: orderId });
 
   } catch (e: any) {
     console.error('❌ Помилка API:', e);
