@@ -111,9 +111,8 @@ export default function Hero({ data }: { data?: any }) {
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-6">
-              Втілюємо <br />
-              <TypewriterText text={heroData.title} className="text-[#7ec8a3]" />
-            </h1>
+  <TypewriterText text={heroData.title} className="text-[#7ec8a3]" />
+</h1>
 
             <motion.p
               initial={{ opacity: 0 }}

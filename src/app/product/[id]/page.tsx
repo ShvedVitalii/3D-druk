@@ -30,6 +30,18 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const { product, category } = data;
   const mainImage = product.images?.[0] || '/images/placeholder.jpg';
 
+  // Функція форматування значень характеристик
+  const formatSpecValue = (label: string, value: string) => {
+    if (!value) return value;
+    if (label === 'Розміри' && !value.includes('мм') && !value.includes('mm')) {
+      return value + ' мм';
+    }
+    if (label === 'Вага' && !value.includes('г') && !value.includes('g')) {
+      return value + ' г';
+    }
+    return value;
+  };
+
   return (
     <div className="pt-32 pb-20 container-custom max-w-5xl mx-auto">
       <div className="text-sm text-gray-400 mb-6">
@@ -88,12 +100,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <div className="mt-6 bg-gray-50 rounded-xl p-4 border border-gray-200">
               <h3 className="font-bold text-[#1a3c34] mb-3">Характеристики</h3>
               <div className="grid grid-cols-2 gap-2">
-                {product.specs.map((spec: any, i: number) => (
-                  <div key={i} className="flex justify-between border-b border-gray-200 py-1.5 text-sm">
-                    <span className="text-gray-500">{spec.label}</span>
-                    <span className="font-medium text-[#1a3c34]">{spec.value}</span>
-                  </div>
-                ))}
+                {product.specs.map((spec: any, i: number) => {
+                  const displayValue = formatSpecValue(spec.label, spec.value);
+                  return (
+                    <div key={i} className="flex justify-between border-b border-gray-200 py-1.5 text-sm">
+                      <span className="text-gray-500">{spec.label}</span>
+                      <span className="font-medium text-[#1a3c34]">{displayValue}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

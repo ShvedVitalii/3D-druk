@@ -40,16 +40,13 @@ export default async function Home() {
   return (
     <div className="overflow-hidden">
       <Hero data={content.hero} />
+      <GalleryPreview data={content.gallery} />
       <Features data={content.features} />
       <Materials data={content.materials} />
       <Process data={content.process} />
       <Pricing data={content.pricing} />
-      <GalleryPreview data={content.gallery} />
-      
-      {/* === НАШІ ЗАМОВНИКИ ТА ПАРТНЕРИ === */}
       <Clients />
       <Partners />
-      
       <Testimonials data={content.testimonials} />
       <FAQ data={content.faq} />
       <Contact data={content.contacts} />

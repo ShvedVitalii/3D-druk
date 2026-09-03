@@ -47,7 +47,6 @@ export default function CategoryPage() {
     fetchData();
   }, [slug, router]);
 
-  // Скидаємо сторінку при зміні slug
   useEffect(() => {
     setCurrentPage(1);
   }, [slug]);
@@ -76,6 +75,15 @@ export default function CategoryPage() {
     const weight = product.specs.find((s: any) =>
       s.label.toLowerCase().includes('вага')
     );
+    
+    // Додаємо одиниці виміру, якщо їх немає
+    if (dimensions && dimensions.value && !dimensions.value.includes('мм') && !dimensions.value.includes('mm')) {
+      dimensions.value = dimensions.value + ' мм';
+    }
+    if (weight && weight.value && !weight.value.includes('г') && !weight.value.includes('g')) {
+      weight.value = weight.value + ' г';
+    }
+    
     return { material, dimensions, weight };
   }
 
