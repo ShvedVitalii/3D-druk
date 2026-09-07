@@ -81,7 +81,6 @@ export default function Clients() {
   return (
     <section ref={ref} className="py-16 bg-white">
       <div className="container-custom">
-        {/* ТУТ ПРИМУСОВО ВИВОДИМО ЗАГОЛОВОК ТА ОПИС */}
         <h2 className="text-4xl md:text-5xl font-heading font-bold text-[#1a3c34] text-center mb-2">
           Наші замовники
         </h2>
@@ -108,22 +107,22 @@ export default function Clients() {
                 {Array.from({ length: totalPages }).map((_, page) => (
                   <div key={page} className="flex w-full flex-shrink-0 justify-around gap-4">
                     {sortedItems.slice(page * itemsPerView, (page + 1) * itemsPerView).map((item) => (
-                      <div key={item.id} className="flex flex-col items-center w-24 md:w-32">
-                        <div className="w-20 h-20 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-gray-200 shadow-md bg-white flex items-center justify-center">
+                      <div key={item.id} className="flex flex-col items-center w-28 md:w-36">
+                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-gray-200 shadow-md bg-white flex items-center justify-center p-1">
                           {item.logo ? (
                             <Image
                               src={item.logo}
                               alt={item.name}
-                              width={112}
-                              height={112}
-                              className="w-full h-full object-cover"
+                              width={128}
+                              height={128}
+                              className="w-full h-full object-contain"
                               unoptimized
                             />
                           ) : (
-                            <span className="text-4xl text-gray-400">🏢</span>
+                            <span className="text-5xl text-gray-400">🏢</span>
                           )}
                         </div>
-                        <p className="text-sm md:text-base font-semibold text-gray-800 mt-2 text-center bg-white/80 px-2 py-0.5 rounded">
+                        <p className="text-sm md:text-base font-semibold text-gray-800 mt-3 text-center bg-white/80 px-3 py-1 rounded">
                           {item.name}
                         </p>
                       </div>

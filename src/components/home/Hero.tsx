@@ -76,7 +76,8 @@ export default function Hero({ data }: { data?: any }) {
 
   return (
     <>
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative flex items-center overflow-hidden min-h-[60vh] md:min-h-screen">
+        {/* === ВІДЕО НА ВЕСЬ ФОН === */}
         {heroData.heroVideo ? (
           <video
             src={heroData.heroVideo}
@@ -89,10 +90,12 @@ export default function Hero({ data }: { data?: any }) {
         ) : (
           <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#1a3c34] via-[#1a3c34] to-[#2d5a4b]" />
         )}
-        
+
+        {/* Затемнення поверх відео */}
         <div className="absolute inset-0 z-10 bg-black/40" />
 
-        <div className="container-custom relative z-20 py-20 flex items-center justify-start min-h-screen w-full">
+        {/* Контент поверх відео */}
+        <div className="container-custom relative z-20 py-12 md:py-20 flex items-center justify-start min-h-[60vh] md:min-h-screen w-full">
           <motion.div
             initial={{ opacity: 0, x: -60 }}
             animate={{ opacity: 1, x: 0 }}
@@ -110,72 +113,67 @@ export default function Hero({ data }: { data?: any }) {
               </Link>
             </motion.div>
 
-            <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-6">
-  <TypewriterText text={heroData.title} className="text-[#7ec8a3]" />
-</h1>
+            <h1 className="text-4xl md:text-7xl font-heading font-bold leading-tight mb-6">
+              <TypewriterText text={heroData.title} className="text-[#7ec8a3]" />
+            </h1>
 
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="text-xl text-gray-200 max-w-lg mb-8"
+              className="text-base md:text-xl text-gray-200 max-w-lg mb-8"
             >
               {heroData.subtitle}
             </motion.p>
 
-            {/* ===== КНОПКИ – КРАСИВЕ РОЗТАШУВАННЯ ===== */}
+            {/* ===== КНОПКИ ===== */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
-              className="flex flex-col gap-4 items-start"
+              className="flex flex-wrap gap-3 md:gap-4 items-center"
             >
-              {/* Перший ряд: Замовити друк + Розрахувати вартість */}
-              <div className="flex flex-wrap gap-4">
-                <Button
-                  href="/order"
-                  variant="primary"
-                  className="bg-[#1a3c34] text-white hover:bg-[#2d5a4b] shadow-lg shadow-[#1a3c34]/30 hover:shadow-[#1a3c34]/50 text-lg px-8 py-4 transition-all duration-300 hover:scale-105"
-                >
-                  {heroData.buttonText}
-                </Button>
-                <Button
-                  onClick={() => setCalcOpen(true)}
-                  variant="secondary"
-                  className="border-2 border-[#c9a84c] text-[#c9a84c] hover:bg-[#c9a84c]/10 hover:scale-105 transition-all duration-300 text-lg px-8 py-4"
-                >
-                  Розрахувати вартість
-                </Button>
-              </div>
+              <Link
+                href="/order"
+                className="px-6 md:px-8 py-3 md:py-4 bg-white text-[#1a3c34] font-bold rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm md:text-lg flex items-center gap-2"
+              >
+                <span>{heroData.buttonText}</span>
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
 
-              {/* Другий ряд: Авторські моделі + Донат (однакового розміру) */}
-              <div className="flex flex-wrap gap-4">
-                <Button
-                  onClick={() => setShowNewGenModal(true)}
-                  variant="primary"
-                  className="bg-gradient-to-r from-[#c9a84c] to-[#b89a3e] text-[#1a3c34] font-bold shadow-lg shadow-[#c9a84c]/30 hover:shadow-[#c9a84c]/50 hover:scale-105 transition-all duration-300 text-lg px-8 py-4"
+              <button
+                onClick={() => setCalcOpen(true)}
+                className="px-6 md:px-8 py-3 md:py-4 bg-transparent border-2 border-white/80 text-white font-semibold rounded-full hover:bg-white/10 hover:scale-105 transition-all duration-300 text-sm md:text-lg"
+              >
+                Розрахувати вартість
+              </button>
+
+              <button
+                onClick={() => setShowNewGenModal(true)}
+                className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#c9a84c] to-[#b89a3e] text-[#1a3c34] font-bold rounded-full shadow-lg shadow-[#c9a84c]/30 hover:shadow-[#c9a84c]/50 hover:scale-105 transition-all duration-300 text-sm md:text-lg flex items-center gap-2"
+              >
+                <span>✨ Авторські моделі</span>
+              </button>
+
+              {heroData.donationLink && (
+                <a
+                  href={heroData.donationLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-full shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105 transition-all duration-300 text-sm md:text-lg flex items-center gap-2"
                 >
-                  ✨ Розробка авторських моделей
-                </Button>
-                {heroData.donationLink && (
-                  <Button
-                    href={heroData.donationLink}
-                    variant="secondary"
-                    className="bg-red-500/20 text-red-400 border-red-500/50 hover:bg-red-500/30 hover:border-red-500 hover:scale-105 transition-all duration-300 text-lg px-8 py-4"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ❤️ {heroData.donationButtonText || 'Донат'}
-                  </Button>
-                )}
-              </div>
+                  <span>❤️ {heroData.donationButtonText || 'Донат'}</span>
+                </a>
+              )}
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="flex items-center gap-8 mt-8 text-sm text-gray-300"
+              className="flex items-center gap-6 md:gap-8 mt-6 md:mt-8 text-xs md:text-sm text-gray-300"
             >
               <span className="flex items-center gap-1">
                 <span className="text-yellow-400">★</span> 4.9 (120+ відгуків)
@@ -186,20 +184,23 @@ export default function Hero({ data }: { data?: any }) {
           </motion.div>
         </div>
 
+        {/* Стрілка вниз */}
         <motion.div
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/40 cursor-pointer z-20"
           animate={{ y: [0, 16, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           onClick={scrollToFeatures}
         >
-          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
         </motion.div>
       </section>
 
+      {/* Калькулятор */}
       <CalculatorModal isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
 
+      {/* Модалка авторських моделей */}
       <AnimatePresence>
         {showNewGenModal && (
           <div

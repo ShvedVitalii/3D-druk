@@ -6,6 +6,7 @@ import PageTransition from '@/components/PageTransition';
 import AIConsultant from '@/components/ui/AIConsultant';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import SessionProviderWrapper from '@/components/providers/SessionProviderWrapper';
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
@@ -49,6 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </main>
           <Footer />
           <AIConsultant />
+          <GoogleAnalytics gaId="G-JQP2LD8P0T" />
         </SessionProviderWrapper>
       </body>
     </html>
